@@ -72,11 +72,11 @@
         </div>
       </header>
 
-      <!-- Cabeçalho de Impressão (Exibido apenas ao gerar o PDF semanal/mensal consolidado) -->
+      <!-- Cabeçalho de Impressão (Exibido apenas ao gerar o PDF consolidado) -->
       <div class="print-header show-print">
         <div class="print-header-top">
           <h2>Relatório Consolidado de Ações Estratégicas</h2>
-          <span class="print-badge" id="print-period-badge">Semanal</span>
+          <span class="print-badge" id="print-period-badge">Por Data</span>
         </div>
         <div class="print-header-details">
           <div><strong>Unidade Escolar:</strong> <span id="print-school-name">SESI Vila Leopoldina</span></div>
@@ -89,21 +89,33 @@
       <!-- Barra de Filtros e Período (Ocultada na impressão) -->
       <section class="filters-section no-print">
         <div class="period-toggle-container">
-          <button class="toggle-btn active" id="btn-view-weekly">Relatório Semanal</button>
-          <button class="toggle-btn" id="btn-view-monthly">Relatório Mensal</button>
+          <button class="toggle-btn active" id="btn-view-weekly">Relatório por Data</button>
+          <button class="toggle-btn" id="btn-view-monthly">Relatório por Mês</button>
         </div>
 
         <div class="filters-wrapper">
-          <!-- Semana Ativa -->
-          <div class="filter-group" id="group-week-picker">
-            <label for="week-picker">Selecione a Semana:</label>
-            <input type="week" id="week-picker" class="input-control">
+          <!-- Intervalo de Datas -->
+          <div class="period-range-group" id="group-date-range">
+            <div class="filter-group">
+              <label for="date-start-picker">Data Inicial:</label>
+              <input type="date" id="date-start-picker" class="input-control">
+            </div>
+            <div class="filter-group">
+              <label for="date-end-picker">Data Final:</label>
+              <input type="date" id="date-end-picker" class="input-control">
+            </div>
           </div>
 
-          <!-- Mês Ativo -->
-          <div class="filter-group hidden" id="group-month-picker">
-            <label for="month-picker">Selecione o Mês:</label>
-            <input type="month" id="month-picker" class="input-control">
+          <!-- Intervalo de Meses -->
+          <div class="period-range-group hidden" id="group-month-range">
+            <div class="filter-group">
+              <label for="month-start-picker">Mês Inicial:</label>
+              <input type="month" id="month-start-picker" class="input-control">
+            </div>
+            <div class="filter-group">
+              <label for="month-end-picker">Mês Final:</label>
+              <input type="month" id="month-end-picker" class="input-control">
+            </div>
           </div>
 
           <!-- Categoria -->
@@ -220,7 +232,7 @@
       <!-- Bloco de Assinaturas (Exibido apenas na última folha de impressão do PDF consolidado) -->
       <section class="print-signature-area show-print">
         <div class="signature-title">
-          <p>Declaro para os devidos fins que as ações descritas neste relatório semanal/mensal refletem fielmente as estratégias executadas no período.</p>
+          <p>Declaro para os devidos fins que as ações descritas neste relatório refletem fielmente as estratégias executadas no período selecionado.</p>
         </div>
         <div class="signature-block">
           <div class="signature-line">
@@ -235,6 +247,7 @@
           </div>
         </div>
       </section>
+      <img src="marca-fieg.svg" alt="Sistema FIEG SESI SENAI IEL" class="print-footer-logo show-print">
     </main>
   </div>
 
@@ -308,7 +321,7 @@
             <label for="action-status">Status de Envio:</label>
             <select id="action-status" class="input-control">
               <option value="Rascunho">Salvar como Rascunho (Fica salvo localmente)</option>
-              <option value="Enviada para Consolidação">Salvar e Enviar para Consolidação Semanal/Mensal</option>
+              <option value="Enviada para Consolidação">Salvar e Enviar para Consolidação</option>
             </select>
           </div>
         </div>

@@ -1,9 +1,11 @@
 // Estado Global da Aplicação
 const state = {
   actions: [],
-  viewMode: 'weekly', // 'weekly' ou 'monthly'
-  activeWeek: '',     // Formato YYYY-Www
-  activeMonth: '',    // Formato YYYY-MM
+  viewMode: 'date',   // 'date' ou 'monthly'
+  activeStartDate: '', // Formato YYYY-MM-DD
+  activeEndDate: '',   // Formato YYYY-MM-DD
+  activeStartMonth: '',// Formato YYYY-MM
+  activeEndMonth: '',  // Formato YYYY-MM
   directorName: 'Fabiano Sousa',
   schoolUnit: 'SESI Vila Leopoldina',
   photoBase64: '',    // Armazena a imagem ativa em processamento
@@ -130,6 +132,43 @@ function formatDateToBr(dateStr) {
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
+function formatMonthToBr(monthStr) {
+  if (!monthStr) return "";
+  const [year, month] = monthStr.split('-');
+  const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  const monthName = months[parseInt(month, 10) - 1];
+  return monthName && year ? `${monthName} de ${year}` : monthStr;
+}
+
+function getDateRangeLabel(startDate, endDate) {
+  if (!startDate && !endDate) return "Período não definido";
+  if (startDate && !endDate) return `A partir de ${formatDateToBr(startDate)}`;
+  if (!startDate && endDate) return `Até ${formatDateToBr(endDate)}`;
+  return `${formatDateToBr(startDate)} a ${formatDateToBr(endDate)}`;
+}
+
+function getMonthRangeLabel(startMonth, endMonth) {
+  if (!startMonth && !endMonth) return "Período não definido";
+  if (startMonth && !endMonth) return `A partir de ${formatMonthToBr(startMonth)}`;
+  if (!startMonth && endMonth) return `Até ${formatMonthToBr(endMonth)}`;
+  return `${formatMonthToBr(startMonth)} a ${formatMonthToBr(endMonth)}`;
+}
+
+function isDateInActiveRange(dateStr) {
+  if (!dateStr) return false;
+  const start = state.activeStartDate || '0000-01-01';
+  const end = state.activeEndDate || '9999-12-31';
+  return dateStr >= start && dateStr <= end;
+}
+
+function isMonthInActiveRange(dateStr) {
+  if (!dateStr) return false;
+  const monthCode = getMonthCode(dateStr);
+  const start = state.activeStartMonth || '0000-01';
+  const end = state.activeEndMonth || '9999-12';
+  return monthCode >= start && monthCode <= end;
+}
+
 // ==========================================================================
 // COMPRESSÃO E EVIDÊNCIA FOTOGRÁFICA
 // ==========================================================================
@@ -239,34 +278,28 @@ function render() {
   const filterStatus = document.getElementById('filter-status').value;
   const searchQuery = document.getElementById('search-query').value.toLowerCase().trim();
   
-  const activePeriodCode = state.viewMode === 'weekly' ? state.activeWeek : state.activeMonth;
-  
   // Atualizar textos e metadados de impressão
   const labelPeriod = document.getElementById('label-active-period');
   const printPeriodDates = document.getElementById('print-period-dates');
   
-  if (state.viewMode === 'weekly') {
-    const weekNum = state.activeWeek.split('-W')[1] || "";
-    const range = getWeekDatesLabel(state.activeWeek);
-    labelPeriod.innerHTML = `<i data-lucide="calendar"></i> Exibindo relatório da <strong>Semana ${weekNum}</strong> (${range})`;
+  if (state.viewMode === 'date') {
+    const range = getDateRangeLabel(state.activeStartDate, state.activeEndDate);
+    labelPeriod.innerHTML = `<i data-lucide="calendar"></i> Exibindo relatório por <strong>intervalo de datas</strong> (${range})`;
     printPeriodDates.textContent = range;
-    document.getElementById('print-period-badge').textContent = `Semanal - Semana ${weekNum}`;
+    document.getElementById('print-period-badge').textContent = 'Por Data';
   } else {
-    const [year, month] = state.activeMonth.split('-');
-    const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-    const name = months[parseInt(month, 10) - 1];
-    const range = getMonthDatesLabel(state.activeMonth);
-    labelPeriod.innerHTML = `<i data-lucide="calendar"></i> Exibindo relatório de <strong>${name} de ${year}</strong> (${range})`;
+    const range = getMonthRangeLabel(state.activeStartMonth, state.activeEndMonth);
+    labelPeriod.innerHTML = `<i data-lucide="calendar"></i> Exibindo relatório por <strong>intervalo de meses</strong> (${range})`;
     printPeriodDates.textContent = range;
-    document.getElementById('print-period-badge').textContent = `Mensal - ${name}/${year}`;
+    document.getElementById('print-period-badge').textContent = 'Por Mês';
   }
   
   // Filtrar dados por período
   let filtered = state.actions.filter(a => {
-    if (state.viewMode === 'weekly') {
-      return getWeekCode(a.data) === state.activeWeek;
+    if (state.viewMode === 'date') {
+      return isDateInActiveRange(a.data);
     } else {
-      return getMonthCode(a.data) === state.activeMonth;
+      return isMonthInActiveRange(a.data);
     }
   });
   
@@ -483,6 +516,7 @@ window.printIndividualAction = function(id) {
         <p class="role">Supervisor(a) de Ensino Regional</p>
       </div>
     </div>
+    <img src="marca-fieg.svg" alt="Sistema FIEG SESI SENAI IEL" class="print-footer-logo">
   `;
   
   document.body.appendChild(printDiv);
@@ -502,10 +536,10 @@ window.printIndividualAction = function(id) {
 
 function exportToCSV() {
   let periodActions = state.actions.filter(a => {
-    if (state.viewMode === 'weekly') {
-      return getWeekCode(a.data) === state.activeWeek;
+    if (state.viewMode === 'date') {
+      return isDateInActiveRange(a.data);
     } else {
-      return getMonthCode(a.data) === state.activeMonth;
+      return isMonthInActiveRange(a.data);
     }
   });
   
@@ -546,7 +580,9 @@ function exportToCSV() {
   
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  const filePeriod = state.viewMode === 'weekly' ? `Semana-${state.activeWeek.split('-W')[1]}` : `Mes-${state.activeMonth}`;
+  const filePeriod = state.viewMode === 'date'
+    ? `Datas-${state.activeStartDate || 'inicio'}-a-${state.activeEndDate || 'fim'}`
+    : `Meses-${state.activeStartMonth || 'inicio'}-a-${state.activeEndMonth || 'fim'}`;
   link.setAttribute("download", `Acoes-Estrategicas-${state.schoolUnit.replace(/\s+/g, '-')}-${filePeriod}.csv`);
   document.body.appendChild(link);
   link.click();
@@ -650,50 +686,83 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('acoes_estrategicas_db', JSON.stringify(state.actions));
   }
   
-  // Inicializar datas padrão (Hoje)
+  // Inicializar períodos padrão (semana atual para datas e mês atual para meses)
   const today = new Date();
-  state.activeWeek = getWeekCode(today);
-  state.activeMonth = getMonthCode(today);
-  
-  document.getElementById('week-picker').value = state.activeWeek;
-  document.getElementById('month-picker').value = state.activeMonth;
+  const todayIso = today.toISOString().split('T')[0];
+  const dayOfWeek = today.getDay() || 7;
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+  state.activeStartDate = startOfWeek.toISOString().split('T')[0];
+  state.activeEndDate = endOfWeek.toISOString().split('T')[0];
+  state.activeStartMonth = getMonthCode(todayIso);
+  state.activeEndMonth = getMonthCode(todayIso);
+
+  document.getElementById('date-start-picker').value = state.activeStartDate;
+  document.getElementById('date-end-picker').value = state.activeEndDate;
+  document.getElementById('month-start-picker').value = state.activeStartMonth;
+  document.getElementById('month-end-picker').value = state.activeEndMonth;
   
   render();
   
   // --- EVENT BINDING ---
   
-  // Toggle de visualização (Semanal vs Mensal)
+  // Toggle de visualização (Data vs Mês)
   document.getElementById('btn-view-weekly').addEventListener('click', (e) => {
     e.target.classList.add('active');
     document.getElementById('btn-view-monthly').classList.remove('active');
-    document.getElementById('group-week-picker').classList.remove('hidden');
-    document.getElementById('group-month-picker').classList.add('hidden');
-    state.viewMode = 'weekly';
+    document.getElementById('group-date-range').classList.remove('hidden');
+    document.getElementById('group-month-range').classList.add('hidden');
+    state.viewMode = 'date';
     render();
   });
   
   document.getElementById('btn-view-monthly').addEventListener('click', (e) => {
     e.target.classList.add('active');
     document.getElementById('btn-view-weekly').classList.remove('active');
-    document.getElementById('group-month-picker').classList.remove('hidden');
-    document.getElementById('group-week-picker').classList.add('hidden');
+    document.getElementById('group-month-range').classList.remove('hidden');
+    document.getElementById('group-date-range').classList.add('hidden');
     state.viewMode = 'monthly';
     render();
   });
   
   // Inputs de Período
-  document.getElementById('week-picker').addEventListener('change', (e) => {
-    if (e.target.value) {
-      state.activeWeek = e.target.value;
-      render();
+  document.getElementById('date-start-picker').addEventListener('change', (e) => {
+    state.activeStartDate = e.target.value;
+    if (state.activeEndDate && state.activeStartDate > state.activeEndDate) {
+      state.activeEndDate = state.activeStartDate;
+      document.getElementById('date-end-picker').value = state.activeEndDate;
     }
+    render();
   });
   
-  document.getElementById('month-picker').addEventListener('change', (e) => {
-    if (e.target.value) {
-      state.activeMonth = e.target.value;
-      render();
+  document.getElementById('date-end-picker').addEventListener('change', (e) => {
+    state.activeEndDate = e.target.value;
+    if (state.activeStartDate && state.activeEndDate < state.activeStartDate) {
+      state.activeStartDate = state.activeEndDate;
+      document.getElementById('date-start-picker').value = state.activeStartDate;
     }
+    render();
+  });
+
+  document.getElementById('month-start-picker').addEventListener('change', (e) => {
+    state.activeStartMonth = e.target.value;
+    if (state.activeEndMonth && state.activeStartMonth > state.activeEndMonth) {
+      state.activeEndMonth = state.activeStartMonth;
+      document.getElementById('month-end-picker').value = state.activeEndMonth;
+    }
+    render();
+  });
+
+  document.getElementById('month-end-picker').addEventListener('change', (e) => {
+    state.activeEndMonth = e.target.value;
+    if (state.activeStartMonth && state.activeEndMonth < state.activeStartMonth) {
+      state.activeStartMonth = state.activeEndMonth;
+      document.getElementById('month-start-picker').value = state.activeStartMonth;
+    }
+    render();
   });
   
   // Filtros de seleção

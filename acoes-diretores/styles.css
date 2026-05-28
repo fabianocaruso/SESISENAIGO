@@ -365,9 +365,13 @@ body::after {
   align-items: flex-end;
 }
 
+.period-range-group {
+  display: contents;
+}
+
 @media (min-width: 1024px) {
   .filters-wrapper {
-    grid-template-columns: auto auto auto 1fr;
+    grid-template-columns: repeat(5, minmax(150px, auto)) 1fr;
   }
 }
 
@@ -1408,6 +1412,21 @@ select.input-control {
   .signer-role {
     font-size: 8.5pt;
     color: #4a5568;
+  }
+
+  .print-footer-logo {
+    display: block !important;
+    position: fixed;
+    right: 10mm;
+    bottom: 7mm;
+    width: 34mm;
+    height: auto;
+    z-index: 9999;
+  }
+
+  .main-content,
+  .temp-print-area {
+    padding-bottom: 22mm !important;
   }
 
   /* Evitar quebra órfã de cabeçalhos */

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Logomarca Sistema FIEG SESI SENAI IEL</title>
+  <desc id="desc">Marca institucional azul do Sistema FIEG, com assinatura SESI, SENAI e IEL.</desc>
+  <rect width="1200" height="675" fill="none"/>
+  <g fill="#1654a5" font-family="Arial Black, Arial, Helvetica, sans-serif" font-style="italic" font-weight="900">
+    <text x="95" y="155" font-size="150" letter-spacing="-7">Sistema</text>
+    <text x="35" y="505" font-size="360" letter-spacing="-20">FIEG</text>
+    <text x="310" y="625" font-size="105" letter-spacing="-5">SESI</text>
+    <text x="590" y="625" font-size="105" letter-spacing="-5">SENAI</text>
+    <text x="985" y="625" font-size="105" letter-spacing="-5">IEL</text>
+  </g>
+  <g fill="#149bd7">
+    <path d="M390 205h115c12 0 20 10 18 22l-9 55c-1 7-6 13-13 16l-124 57 20-133c1-10 10-17 20-17z"/>
+  </g>
+  <g stroke="#1654a5" stroke-width="8" stroke-linecap="round">
+    <line x1="545" y1="590" x2="530" y2="650"/>
+    <line x1="925" y1="590" x2="910" y2="650"/>
+  </g>
+</svg>
