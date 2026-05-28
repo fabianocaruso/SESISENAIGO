@@ -4,87 +4,149 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SESI SENAI Goiás | sesisenai.inf.br</title>
-  <meta name="description" content="Página de entrada do domínio sesisenai.inf.br para acesso aos ambientes digitais SESI SENAI." />
+  <meta name="description" content="Ambiente digital integrado SESI SENAI Goiás." />
   <meta name="theme-color" content="#15499B" />
   <link rel="preload" href="marcasesisenai.png" as="image" />
-  <link rel="stylesheet" href="styles.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --azul: #15499B;
+      --azul-profundo: #0E3578;
+      --laranja: #F04B16;
+      --verde: #58B031;
+      --cinza: #6D7785;
+      --linha: rgba(21, 73, 155, .13);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 32px 20px;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(88, 176, 49, .18), transparent 26rem),
+        radial-gradient(circle at 90% 14%, rgba(240, 75, 22, .15), transparent 24rem),
+        linear-gradient(145deg, #ffffff 0%, #f4f8ff 50%, #f7f2e8 100%);
+      color: #202A36;
+      text-align: center;
+    }
+
+    .logo {
+      width: min(380px, 72vw);
+      height: auto;
+      display: block;
+      margin: 0 auto 48px;
+    }
+
+    .domain {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px;
+      border: 1px solid var(--linha);
+      border-radius: 999px;
+      background: rgba(255,255,255,.7);
+      color: var(--azul-profundo);
+      font-size: .88rem;
+      font-weight: 700;
+      margin-bottom: 48px;
+      letter-spacing: .03em;
+    }
+
+    .domain::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--verde);
+      box-shadow: 14px 0 0 var(--laranja);
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 40px;
+      background: var(--azul);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      text-decoration: none;
+      border-radius: 999px;
+      box-shadow: 0 18px 42px rgba(21, 73, 155, .28);
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+      letter-spacing: .01em;
+    }
+
+    .btn:hover, .btn:focus-visible {
+      background: var(--azul-profundo);
+      transform: translateY(-3px);
+      box-shadow: 0 24px 50px rgba(14, 53, 120, .32);
+      outline: none;
+    }
+
+    .btn svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 14px 20px;
+      border-top: 1px solid var(--linha);
+      background: rgba(255,255,255,.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--cinza);
+      font-size: .82rem;
+    }
+
+    footer a {
+      color: var(--azul);
+      font-weight: 700;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-  <div class="page">
-    <header aria-label="Cabeçalho">
-      <a class="brand" href="/" aria-label="SESI SENAI Goiás">
-        <img src="marcasesisenai.png" alt="Marca SESI SENAI" />
-      </a>
-      <div class="domain-pill">sesisenai.inf.br</div>
-    </header>
 
-    <main>
-      <section class="hero" aria-labelledby="titulo">
-        <div>
-          <p class="eyebrow">Ambiente digital integrado</p>
-          <h1 id="titulo">Uma entrada simples para acessar os serviços SESI SENAI.</h1>
-          <p class="lead">
-            Este domínio reúne caminhos de acesso, comunicação e orientação para estudantes,
-            docentes, equipes técnicas e comunidade atendida pelas instituições.
-          </p>
-          <div class="actions" aria-label="Ações principais">
-            <a class="button primary" href="#acessos">Acessar Sistemas</a>
-            <a class="button secondary" href="mailto:bibliotecavirtual@fieg.com.br">Suporte Técnico</a>
-          </div>
-        </div>
+  <img src="marcasesisenai.png" alt="Marca SESI SENAI Goiás" class="logo" />
 
-        <aside class="panel" id="acessos" aria-label="Acessos rápidos">
-          <h2>Acessos rápidos</h2>
-          <p>Use esta página como ponto inicial para organizar links, avisos e serviços do ecossistema SESI SENAI.</p>
-          <div class="cards">
+  <div class="domain">sesisenai.inf.br</div>
 
-            <a href="acoes-diretores" class="card">
-              <div class="icon" aria-hidden="true">1</div>
-              <div>
-                <strong>Gestão Estratégica</strong>
-                <span>Painel exclusivo para Diretores SESI registrarem ações, gerarem evidências e consolidarem relatórios.</span>
-              </div>
-            </a>
+  <a href="painel-executivo/" class="btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+    </svg>
+    Painel Executivo
+  </a>
 
-            <a href="painel-executivo/" class="card">
-              <div class="icon" aria-hidden="true">2</div>
-              <div>
-                <strong>Painel Executivo</strong>
-                <span>Informe executivo institucional: importe relatórios Word, filtre por eixo ou período e gere PDF oficial.</span>
-              </div>
-            </a>
+  <footer>
+    <span>© <span id="ano"></span> SESI SENAI Goiás</span>
+    <span>·</span>
+    <a href="mailto:bibliotecavirtual@fieg.com.br">bibliotecavirtual@fieg.com.br</a>
+  </footer>
 
-            <a href="#" class="card">
-              <div class="icon" aria-hidden="true">3</div>
-              <div>
-                <strong>Educação e formação</strong>
-                <span>Espaço para orientar o acesso a cursos, trilhas, materiais e ambientes de aprendizagem.</span>
-              </div>
-            </a>
-
-            <a href="#" class="card">
-              <div class="icon" aria-hidden="true">3</div>
-              <div>
-                <strong>Biblioteca Virtual</strong>
-                <span>Entrada para serviços de curadoria, pesquisa, leitura e apoio documental.</span>
-              </div>
-            </a>
-
-          </div>
-        </aside>
-      </section>
-    </main>
-
-    <footer>
-      <span>© <span id="ano"></span> SESI SENAI Goiás. Todos os direitos reservados.</span>
-      <nav class="footer-links" aria-label="Links de rodapé">
-        <a href="mailto:bibliotecavirtual@fieg.com.br">bibliotecavirtual@fieg.com.br</a>
-      </nav>
-    </footer>
-  </div>
-
-  <script>
-    document.getElementById('ano').textContent = new Date().getFullYear();
-  </script>
+  <script>document.getElementById('ano').textContent = new Date().getFullYear();</script>
 </body>
 </html>
