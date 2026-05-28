@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Static web portal for **SESI SENAI Goiás** (`sesisenai.inf.br`). No build tools, no package manager, no framework — pure HTML, CSS, and vanilla JavaScript. All assets are served directly from the filesystem or a static HTTP server.
+Multi-project static hosting environment for **SESI SENAI Goiás** at `sesisenai.inf.br`, hosted on **Cloudflare Pages**. Each project lives in its own subdirectory and is accessible at `sesisenai.inf.br/<nome-do-projeto>/`. The root `index.html` is the portal/landing page that links to all projects.
+
+No build tools, no package manager, no framework — pure HTML, CSS, and vanilla JavaScript throughout.
 
 ## Running Locally
-
-Since there is no build step, serve files with any static HTTP server from the repo root:
 
 ```bash
 python3 -m http.server 8080
@@ -16,77 +16,92 @@ python3 -m http.server 8080
 npx serve .
 ```
 
-Then open `http://localhost:8080` for the landing page and `http://localhost:8080/acoes-diretores/` for the directors panel.
+Open `http://localhost:8080` for the landing page. Each project is accessible at its subdirectory, e.g. `http://localhost:8080/acoes-diretores/`.
 
-There are no tests, no linters, and no CI configuration in this repository.
+There are no tests, no linters, and no CI configuration.
 
-## Architecture
+## Adding a New Project
 
-### Entry point — `index.html`
+1. Create a subdirectory: `mkdir nome-do-projeto`
+2. Add `nome-do-projeto/index.html` as the project entry point, with all assets (CSS, JS, images) inside the same directory using **relative paths** (e.g. `href="styles.css"`, not `href="nome-do-projeto/styles.css"`).
+3. Add a card in the root `index.html` pointing to `nome-do-projeto/`:
 
-Landing page for the domain. Light-themed, single self-contained file (CSS is inlined, no external stylesheet). The only JavaScript is a one-liner that writes the current year into the footer. Links out to sub-applications via anchor cards.
-
-Brand design tokens are defined as CSS custom properties at the top of the `<style>` block:
-- `--azul-sesi-senai: #15499B` (primary blue)
-- `--laranja: #F04B16`, `--verde: #58B031` (accent colours)
-
-### Sub-application — `acoes-diretores/`
-
-A full client-side SPA for SESI directors to register strategic actions, view metrics, and export reports. Three files:
-
-| File | Role |
-|---|---|
-| `acoes-diretores/index.html` | HTML shell: layout, all modals, and all DOM anchor points |
-| `acoes-diretores/app.js` | All application logic (≈900 lines, vanilla JS) |
-| `acoes-diretores/styles.css` | Dark-theme design system (≈1500 lines) |
-
-**Important path quirk:** `acoes-diretores/index.html` references its own CSS and JS with the paths `acoes-diretores/styles.css` and `acoes-diretores/app.js`. These paths are relative to the file's directory, so they resolve to `acoes-diretores/acoes-diretores/…`, which is incorrect for direct file access. The app is intended to be served from the repo root (e.g. `http://localhost:8080/acoes-diretores/`) where those paths would be served correctly by a server rewriting the base, or accessed via the root `index.html` link.
-
-### State and data model
-
-All state lives in a single global `state` object:
-
-```js
-const state = {
-  actions: [],        // array persisted to localStorage
-  viewMode: 'weekly' | 'monthly',
-  activeWeek: '',     // YYYY-Www  (e.g. "2026-W22")
-  activeMonth: '',    // YYYY-MM
-  directorName: '',
-  schoolUnit: '',
-  photoBase64: '',    // active image being edited
-  photoMeta: { ... }
-};
+```html
+<a href="nome-do-projeto/" class="card">
+  <div class="icon" aria-hidden="true">N</div>
+  <div>
+    <strong>Nome do Projeto</strong>
+    <span>Descrição curta do projeto.</span>
+  </div>
+</a>
 ```
 
-**localStorage keys:**
-- `acoes_estrategicas_db` — JSON array of all action records
-- `diretor_nome` — director's display name
-- `diretor_escola` — school unit name
+4. The card icon colour cycles automatically via `nth-child` in `styles.css` (blue → green → orange → dark-blue, repeating). No CSS change needed for up to 6 cards; beyond that, add more `nth-child` rules following the same pattern.
 
-**Action record shape:**
-```js
-{ id, titulo, assunto, data, status, sumario, escola, diretor, evidencia }
+5. If the project uses external CDNs not listed in `_headers`, add those origins to the `Content-Security-Policy` in `_headers`.
+
+## Repository Structure
+
 ```
-`evidencia` stores the photo as a base64 data URL (compressed client-side via Canvas API to max 900 px / JPEG 70%).
+/                        ← root of the Cloudflare Pages deployment
+├── index.html           ← portal landing page
+├── styles.css           ← CSS for the landing page (light theme, SESI SENAI brand)
+├── _headers             ← Cloudflare Pages security headers (applies to all routes)
+├── CLAUDE.md
+├── marca_*.png          ← SESI SENAI brand logo
+└── acoes-diretores/     ← first sub-project (directors' strategic actions panel)
+    ├── index.html
+    ├── styles.css
+    └── app.js
+```
+
+Each project is **self-contained**: its `index.html` must use paths relative to its own directory.
+
+## Cloudflare Pages Configuration
+
+`_headers` sets security headers for all routes (`/*`). Current policy allows:
+
+- Scripts from `'self'` and `unpkg.com` (Lucide icons CDN)
+- Styles from `'self'` and `fonts.googleapis.com`
+- Fonts from `fonts.gstatic.com`
+- Images from `'self'`, `data:`, `blob:`, and `images.unsplash.com` (demo data)
+- `'unsafe-inline'` is required for scripts because `acoes-diretores` injects inline `onclick` handlers via `innerHTML`
+
+When adding a project that loads from additional CDNs, extend the relevant directive in `_headers` rather than weakening the policy globally.
+
+## Landing Page (`index.html` + `styles.css`)
+
+Light-themed portal. CSS tokens are in `styles.css`:
+
+| Token | Value | Use |
+|---|---|---|
+| `--azul-sesi-senai` | `#15499B` | Primary blue |
+| `--laranja` | `#F04B16` | Accent orange |
+| `--verde` | `#58B031` | Accent green |
+| `--azul-profundo` | `#0E3578` | Dark blue (headings) |
+
+## `acoes-diretores` Sub-application
+
+Directors' strategic actions panel — vanilla JS SPA.
+
+### State and persistence
+
+All state lives in a single global `state` object. Persistence is via `localStorage`:
+
+- `acoes_estrategicas_db` — JSON array of action records
+- `diretor_nome`, `diretor_escola` — director profile
+
+Action record shape: `{ id, titulo, assunto, data, status, sumario, escola, diretor, evidencia }`  
+`evidencia` is a base64 data URL — photos are compressed client-side via Canvas API (max 900 px, JPEG 70%).
 
 ### Render pattern
 
-`render()` is the single function that rebuilds the entire actions grid. It is called after every state change (filter, period change, save, delete). It works by setting `grid.innerHTML` wholesale — there is no virtual DOM or diffing.
+`render()` rebuilds the entire actions grid via `innerHTML` replacement. It is called after every state change. KPI counters are recalculated at the top of `render()` before secondary filters run.
 
-KPI counters (`kpi-total`, `kpi-sent`, `kpi-photos`, `kpi-rate`) are recalculated inside `render()` from the period-filtered slice of `state.actions` before secondary filters are applied.
+After every `render()` call, `lucide.createIcons()` must be called to hydrate the newly injected icon elements.
 
 ### Print / PDF system
 
-CSS classes `.no-print` / `.show-print` toggle visibility between screen and `@media print`. The consolidated report hides the sidebar and controls and shows a structured print header and signature block. Individual action print works by appending a temporary `div.temp-print-area` to `<body>`, calling `window.print()`, then removing it.
+`.no-print` / `.show-print` CSS classes control what appears in `@media print`. Individual card print works by appending a temporary `div.temp-print-area` to `<body>`, calling `window.print()`, then removing it.
 
-CSV export uses `;` as the delimiter and prepends a UTF-8 BOM (`﻿`) for correct rendering in Brazilian Windows Excel.
-
-### Third-party dependencies (CDN, no local install)
-
-- **Lucide icons** — `https://unpkg.com/lucide@latest` — initialised via `lucide.createIcons()` after every `render()` call
-- **Google Fonts** — Outfit (headings) + Inter (body) — loaded in `acoes-diretores/index.html` only; the root `index.html` uses system `Arial`
-
-### Two separate design systems
-
-The root landing page and the `acoes-diretores` app have completely independent CSS. Do not mix their tokens. The directors app uses a dark theme (`--bg-app: #080711`) with Indigo as the primary accent (`--primary: #6366f1`).
+CSV export uses `;` delimiter and a UTF-8 BOM (`﻿`) prefix for Brazilian Windows Excel compatibility.
