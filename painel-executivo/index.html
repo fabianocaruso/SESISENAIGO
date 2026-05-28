@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Executivo | SESI &amp; SENAI Goiás</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Montserrat:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Montserrat', 'sans-serif'],
+            serif: ['Merriweather', 'serif']
+          },
+          colors: {
+            brand: {
+              blue: '#003A70',
+              red: '#E31937',
+              light: '#F4F6F9',
+              dark: '#2B2D42',
+              gray: '#8D99AE'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Bibliotecas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <style>
+    body { background-color: #F4F6F9; }
+    .hide-on-pdf { display: block; }
+
+    .pdf-mode .hide-on-pdf { display: none !important; }
+    .pdf-mode .shadow-sm, .pdf-mode .shadow-md { box-shadow: none !important; border: none !important; }
+    .pdf-mode body { background-color: #FFFFFF !important; }
+    .pdf-mode #executive-dashboard { max-width: 100%; padding: 0 15px; }
+    .pdf-mode .exclude-from-pdf { display: none !important; }
+    .pdf-mode #header-logo { display: none !important; }
+
+    .page-break-before { page-break-before: always; }
+    .avoid-break { page-break-inside: avoid; margin-bottom: 40px; }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+  </style>
+</head>
+<body class="text-brand-dark antialiased min-h-screen pb-12">
+
+  <div id="executive-dashboard" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+
+    <!-- Cabeçalho -->
+    <header class="flex justify-between items-start border-b-2 border-brand-blue pb-6 mb-8 avoid-break">
+      <div class="flex-1">
+        <div class="flex items-center gap-3 mb-2">
+          <i class="ph-fill ph-buildings text-3xl text-brand-blue hide-on-pdf"></i>
+          <h1 class="text-3xl md:text-4xl font-black text-brand-blue tracking-tight">INFORME EXECUTIVO</h1>
+        </div>
+        <p class="text-brand-gray font-bold text-lg">
+          SESI &amp; SENAI Goiás | <span id="current-date-display" class="text-brand-dark"></span>
+          <span id="active-filters-display" class="text-brand-red ml-1"></span>
+        </p>
+      </div>
+
+      <div class="flex flex-col items-end gap-4 ml-4">
+        <img id="header-logo" src="https://i.postimg.cc/tJyVRbDt/marca-CONJUNTAS-SESI-SENAI-2024-reduzida-colorida.png" crossorigin="anonymous" alt="Marca SESI SENAI Goiás" style="height: 60px; width: auto; object-fit: contain; display: block;">
+
+        <div class="flex gap-3 hide-on-pdf mt-2">
+          <button onclick="openModal()" class="flex items-center gap-2 bg-white border border-brand-blue text-brand-blue font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+            <i class="ph ph-magic-wand text-xl"></i>
+            Importar Relatório
+          </button>
+          <button onclick="exportToPDF()" class="flex items-center gap-2 bg-brand-blue text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-900 transition-colors" id="btn-export">
+            <i class="ph ph-file-pdf text-xl"></i>
+            Gerar PDF Oficial
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Filtros -->
+    <div class="bg-white p-4 rounded-xl shadow-sm mb-8 flex flex-col gap-4 border border-gray-100 hide-on-pdf" id="filters-container">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 w-full">
+        <div>
+          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Buscar Unidade</label>
+          <input type="text" id="filter-unit-text" onkeyup="applyFilters()" placeholder="Ex: Canaã, Jaiara..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Eixo de Atuação</label>
+          <select id="filter-type" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
+            <option value="all">Todos os Eixos</option>
+            <option value="Educação e Qualificação">Educação e Qualificação</option>
+            <option value="Saúde e Segurança">Saúde e Segurança</option>
+            <option value="Indústria 4.0 e Inovação">Indústria 4.0 e Inovação</option>
+            <option value="Relações Institucionais">Relações Institucionais</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Filtrar por Mês</label>
+          <input type="month" id="filter-month" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Intervalo de Datas</label>
+          <div class="flex gap-2">
+            <input type="date" id="filter-start-date" onchange="applyFilters()" title="Data Inicial" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
+            <input type="date" id="filter-end-date" onchange="applyFilters()" title="Data Final" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center w-full mt-2 border-t border-gray-100 pt-4">
+        <button onclick="clearAllData()" class="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-bold text-sm flex items-center gap-1" title="Zerar Banco de Dados">
+          <i class="ph-bold ph-trash"></i> Apagar Todos os Dados
+        </button>
+        <button onclick="clearFilters()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors font-bold text-sm flex items-center gap-1" title="Limpar Filtros e Ver Tudo">
+          <i class="ph-bold ph-arrows-counter-clockwise"></i> Redefinir Filtros
+        </button>
+      </div>
+    </div>
+
+    <!-- Feed de Notícias -->
+    <div id="news-feed" class="flex flex-col"></div>
+
+  </div>
+
+  <!-- Modal de Importação -->
+  <div id="import-modal" class="fixed inset-0 bg-brand-dark bg-opacity-80 z-50 hidden flex items-center justify-center p-4 hide-on-pdf backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden">
+      <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+        <h3 class="text-2xl font-bold text-brand-blue flex items-center gap-2">
+          <i class="ph-fill ph-magic-wand"></i> Importador Editorial
+        </h3>
+        <button onclick="closeModal()" class="text-gray-500 hover:text-brand-red transition-colors bg-white p-2 rounded-full shadow-sm">
+          <i class="ph-bold ph-x text-xl"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto flex-grow bg-gray-100" id="modal-body">
+        <div id="stage-upload" class="h-full flex flex-col items-center justify-center">
+          <div class="p-10 border-2 border-dashed border-brand-blue rounded-2xl bg-white text-center w-full max-w-xl cursor-pointer hover:bg-blue-50 transition-all shadow-sm" onclick="document.getElementById('word-upload').click()">
+            <input type="file" id="word-upload" accept=".docx" multiple class="hidden" onchange="processWordFiles(event)">
+            <i class="ph-fill ph-file-doc text-7xl text-brand-blue mb-4"></i>
+            <h4 class="text-xl font-bold text-brand-blue" id="upload-feedback">Selecionar ficheiros Word (.docx)</h4>
+            <p class="text-sm text-gray-500 mt-2">O sistema extrairá o texto, fará a limpeza e organizará no formato jornalístico.</p>
+          </div>
+        </div>
+
+        <div id="stage-review" class="hidden">
+          <div class="flex justify-between items-center mb-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <h4 class="text-lg font-bold text-brand-dark"><span id="review-count">0</span> Matérias prontas para revisão.</h4>
+            <button onclick="saveAllParsedReports()" class="bg-brand-blue text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-blue-900 transition flex items-center gap-2">
+              <i class="ph-fill ph-check-circle"></i> Aprovar e Publicar
+            </button>
+          </div>
+          <div id="parsed-cards-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Edição Individual -->
+  <div id="edit-single-modal" class="fixed inset-0 bg-brand-dark bg-opacity-80 z-50 hidden flex items-center justify-center p-4 hide-on-pdf backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-auto max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+        <h3 class="text-xl font-bold text-brand-blue flex items-center gap-2">
+          <i class="ph-fill ph-pencil-simple"></i> Editar Matéria
+        </h3>
+        <button onclick="closeEditModal()" class="text-gray-500 hover:text-brand-red transition-colors bg-white p-2 rounded-full shadow-sm">
+          <i class="ph-bold ph-x text-xl"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto flex-grow bg-white space-y-5">
+        <input type="hidden" id="edit-single-id">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Unidade</label>
+            <input type="text" id="edit-single-unit" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue font-bold uppercase text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Eixo de Atuação</label>
+            <select id="edit-single-type" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue text-sm">
+              <option value="Educação e Qualificação">Educação e Qualificação</option>
+              <option value="Saúde e Segurança">Saúde e Segurança</option>
+              <option value="Indústria 4.0 e Inovação">Indústria 4.0 e Inovação</option>
+              <option value="Relações Institucionais">Relações Institucionais</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Data da Ação</label>
+          <input type="date" id="edit-single-date" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue text-sm font-bold">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Análise Executiva (Título)</label>
+          <input type="text" id="edit-single-title" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue font-serif font-bold text-lg text-brand-dark">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Conteúdo Editorial</label>
+          <textarea id="edit-single-content" rows="6" class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-brand-blue font-serif text-sm text-gray-800 leading-relaxed"></textarea>
+        </div>
+      </div>
+      <div class="p-5 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+        <button onclick="closeEditModal()" class="px-5 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-lg transition">Cancelar</button>
+        <button onclick="saveEditedReport()" class="px-5 py-2 bg-brand-blue text-white font-bold rounded-lg hover:bg-blue-900 shadow-md transition flex items-center gap-2">
+          <i class="ph-fill ph-check-circle"></i> Salvar Alterações
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let reports = JSON.parse(localStorage.getItem('sesiSenaiReportsV4')) || [];
+    let parsedReportsCache = [];
+
+    document.getElementById('current-date-display').innerText = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date());
+
+    window.onload = () => { applyFilters(); };
+
+    function cleanAndImproveText(text) {
+      if (!text) return '';
+      let clean = text.replace(/\*/g, '');
+      clean = clean.replace(/^\s*\d{1,2}\s+de\s+[a-zA-ZçÇ]+\s*(de\s*\d{4})?\s*[-–]\s*/i, '');
+      clean = clean.replace(/\s{2,}/g, ' ').trim();
+      if (clean.length > 0) clean = clean.charAt(0).toUpperCase() + clean.slice(1);
+      return clean;
+    }
+
+    function formatEditorial(cleanedText) {
+      if (!cleanedText) return '';
+      const sentences = cleanedText.split('. ');
+      if (sentences.length > 1 && sentences[0].length < 150) {
+        sentences[0] = `<strong class="font-sans text-brand-dark text-base leading-relaxed tracking-tight">${sentences[0]}.</strong>`;
+        return sentences.join('. ');
+      }
+      return cleanedText;
+    }
+
+    function inferCategory(text) {
+      const t = text.toLowerCase();
+      if (t.includes('curso') || t.includes('turma') || t.includes('aprendizagem') || t.includes('docente') || t.includes('qualificação') || t.includes('formação')) return 'Educação e Qualificação';
+      if (t.includes('saúde') || t.includes('segurança') || t.includes('sipat') || t.includes('vacinação') || t.includes('nr') || t.includes('ergonomia')) return 'Saúde e Segurança';
+      if (t.includes('robótica') || t.includes('tecnologia') || t.includes('inovação') || t.includes('automação') || t.includes('ia') || t.includes('laboratório')) return 'Indústria 4.0 e Inovação';
+      if (t.includes('visita') || t.includes('reunião') || t.includes('parceria') || t.includes('prefeitura') || t.includes('associação')) return 'Relações Institucionais';
+      return 'Educação e Qualificação';
+    }
+
+    function extractDate(text) {
+      const regex = /(\d{1,2})(?:\s*e\s*\d{1,2})?\s+de\s+([a-zA-ZçÇ]+)(?:\s+de\s+(\d{4}))?/;
+      const match = text.match(regex);
+      if (match) {
+        const day = match[1].padStart(2, '0');
+        const monthStr = match[2].toLowerCase();
+        const year = match[3] || new Date().getFullYear();
+        const months = { janeiro: '01', fevereiro: '02', março: '03', marco: '03', abril: '04', maio: '05', junho: '06', julho: '07', agosto: '08', setembro: '09', outubro: '10', novembro: '11', dezembro: '12' };
+        const month = months[monthStr] || '01';
+        return `${year}-${month}-${day}`;
+      }
+      return '';
+    }
+
+    function generateTitle(text) {
+      let clean = cleanAndImproveText(text);
+      const sentenceMatch = clean.match(/^[^.]+/);
+      let title = sentenceMatch ? sentenceMatch[0] : clean;
+      title = title.replace(/^(Realizamos|Participamos de|Participamos da|Participamos|Promovemos|Demos início|Iniciamos|Celebramos a|Celebramos|Acompanhamos a|Acompanhamos|O Departamento Nacional do SESI realizou)\s+(o|a|os|as|um|uma|de|em|no|na|do|da)?\s*/i, '');
+      const coreParts = title.split(/(?:\s+com o objetivo|\s+durante|\s+visando|\s+que teve)/i);
+      title = coreParts[0].trim().replace(/[,:;]\s*$/, '');
+      if (title.length > 0) title = title.charAt(0).toUpperCase() + title.slice(1);
+      return title;
+    }
+
+    function clearAllData() {
+      if (confirm('ATENÇÃO: Deseja apagar todos os relatórios cadastrados do seu computador?')) {
+        localStorage.removeItem('sesiSenaiReportsV4');
+        reports = [];
+        applyFilters();
+      }
+    }
+
+    async function processWordFiles(event) {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+
+      document.getElementById('upload-feedback').innerText = 'A ler e formatar o ficheiro...';
+      parsedReportsCache = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const arrayBuffer = await files[i].arrayBuffer();
+        const result = await mammoth.convertToHtml({ arrayBuffer });
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = result.value;
+
+        let currentAction = null;
+        const nodes = Array.from(tempDiv.childNodes);
+
+        for (const node of nodes) {
+          const rawText = node.textContent;
+          const textUpper = rawText.toUpperCase();
+          const isUnitHeader = rawText.length > 0 && rawText.length < 80 &&
+            (textUpper.includes('SESI') || textUpper.includes('SENAI') || textUpper.includes('FATEC'));
+
+          if (isUnitHeader && node.tagName !== 'IMG' && !node.querySelector('img')) {
+            if (currentAction && currentAction.content.length > 10) {
+              if (!currentAction.title) currentAction.title = generateTitle(currentAction.content);
+              if (!currentAction.type) currentAction.type = inferCategory(currentAction.content);
+              if (!currentAction.date) currentAction.date = new Date().toISOString().split('T')[0];
+              parsedReportsCache.push(currentAction);
+            }
+            currentAction = {
+              id: 'rep_' + Date.now() + Math.random().toString(36).substr(2, 5),
+              unit: rawText.replace(/\*/g, '').trim(),
+              title: '',
+              date: '',
+              type: '',
+              content: '',
+              image: null
+            };
+          } else if (currentAction) {
+            if (!currentAction.date && rawText.length > 5) {
+              const extracted = extractDate(rawText);
+              if (extracted) currentAction.date = extracted;
+            }
+            if (rawText.trim().length > 0) {
+              const cleanText = cleanAndImproveText(rawText);
+              if (cleanText.length > 0) {
+                currentAction.content += (currentAction.content ? '\n\n' : '') + cleanText;
+              }
+            }
+            if (!currentAction.image) {
+              const img = node.tagName === 'IMG' ? node : node.querySelector('img');
+              if (img && img.src) currentAction.image = img.src;
+            }
+          }
+        }
+
+        if (currentAction && currentAction.content.length > 10) {
+          if (!currentAction.title) currentAction.title = generateTitle(currentAction.content);
+          if (!currentAction.type) currentAction.type = inferCategory(currentAction.content);
+          if (!currentAction.date) currentAction.date = new Date().toISOString().split('T')[0];
+          parsedReportsCache.push(currentAction);
+        }
+      }
+
+      renderReviewCards();
+    }
+
+    function renderReviewCards() {
+      document.getElementById('stage-upload').classList.add('hidden');
+      document.getElementById('stage-review').classList.remove('hidden');
+      document.getElementById('review-count').innerText = parsedReportsCache.length;
+
+      const container = document.getElementById('parsed-cards-container');
+      container.innerHTML = '';
+
+      parsedReportsCache.forEach((item) => {
+        const card = document.createElement('div');
+        card.id = `parsed-card-${item.id}`;
+        card.className = 'bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col relative group';
+
+        const imgThumb = item.image
+          ? `<div class="w-full h-32 bg-gray-50 flex items-center justify-center rounded-lg mb-3"><img src="${item.image}" class="max-w-full max-h-full object-contain"></div>`
+          : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center rounded-lg mb-3"><i class="ph ph-image text-4xl text-gray-300"></i></div>`;
+
+        card.innerHTML = `
+          <button onclick="removeParsedCard('${item.id}')" class="absolute top-2 right-2 bg-red-50 text-red-600 p-2 rounded-full hover:bg-red-200 transition opacity-0 group-hover:opacity-100 z-10 shadow-sm border border-red-100" title="Excluir desta importação">
+            <i class="ph-bold ph-trash"></i>
+          </button>
+          ${imgThumb}
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <div>
+              <label class="text-[10px] font-bold text-gray-400 uppercase">Unidade</label>
+              <input type="text" value="${item.unit}" id="edit-unit-${item.id}" class="w-full font-bold text-sm text-brand-blue border-b border-gray-300 focus:outline-none bg-transparent uppercase">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-gray-400 uppercase">Data</label>
+              <input type="date" value="${item.date}" id="edit-date-${item.id}" class="w-full text-xs border border-gray-300 rounded p-1 focus:outline-none font-bold text-brand-dark">
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="text-[10px] font-bold text-gray-400 uppercase">Análise Executiva (Título)</label>
+            <textarea id="edit-title-${item.id}" rows="2" class="w-full text-sm font-bold border border-gray-300 rounded p-1.5 focus:outline-none bg-gray-50 resize-none">${item.title}</textarea>
+          </div>
+          <div class="mb-2">
+            <label class="text-[10px] font-bold text-gray-400 uppercase">Texto da Matéria</label>
+            <textarea id="edit-content-${item.id}" rows="4" class="w-full text-xs border border-gray-300 rounded p-2 focus:outline-none font-serif text-gray-700 leading-relaxed resize-none">${item.content}</textarea>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-gray-400 uppercase">Eixo</label>
+            <select id="edit-type-${item.id}" class="w-full text-xs border border-gray-300 rounded p-1.5 focus:outline-none bg-blue-50 text-brand-blue font-semibold">
+              <option value="Educação e Qualificação" ${item.type === 'Educação e Qualificação' ? 'selected' : ''}>Educação e Qualificação</option>
+              <option value="Saúde e Segurança" ${item.type === 'Saúde e Segurança' ? 'selected' : ''}>Saúde e Segurança</option>
+              <option value="Indústria 4.0 e Inovação" ${item.type === 'Indústria 4.0 e Inovação' ? 'selected' : ''}>Indústria 4.0 e Inovação</option>
+              <option value="Relações Institucionais" ${item.type === 'Relações Institucionais' ? 'selected' : ''}>Relações Institucionais</option>
+            </select>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function removeParsedCard(id) {
+      parsedReportsCache = parsedReportsCache.filter(item => item.id !== id);
+      const el = document.getElementById(`parsed-card-${id}`);
+      if (el) el.remove();
+      document.getElementById('review-count').innerText = parsedReportsCache.length;
+    }
+
+    function compressImageString(base64Str) {
+      return new Promise((resolve) => {
+        if (!base64Str) { resolve(null); return; }
+        const img = new Image();
+        img.src = base64Str;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX = 600;
+          let w = img.width, h = img.height;
+          if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
+          else { if (h > MAX) { w *= MAX / h; h = MAX; } }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.6));
+        };
+        img.onerror = () => resolve(null);
+      });
+    }
+
+    async function saveAllParsedReports() {
+      const btn = event.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'A guardar...';
+      btn.disabled = true;
+
+      const compressPromises = [];
+      parsedReportsCache.forEach((item) => {
+        item.unit = document.getElementById(`edit-unit-${item.id}`).value;
+        item.title = document.getElementById(`edit-title-${item.id}`).value;
+        item.date = document.getElementById(`edit-date-${item.id}`).value;
+        item.type = document.getElementById(`edit-type-${item.id}`).value;
+        item.content = document.getElementById(`edit-content-${item.id}`).value;
+        if (item.image) {
+          compressPromises.push(
+            compressImageString(item.image).then(compressed => { item.image = compressed; })
+          );
+        }
+      });
+
+      await Promise.all(compressPromises);
+
+      try {
+        reports = [...reports, ...parsedReportsCache];
+        localStorage.setItem('sesiSenaiReportsV4', JSON.stringify(reports));
+        applyFilters();
+        closeModal();
+      } catch (e) {
+        alert('⚠️ Limite de Memória Atingido. Esvazie a base de dados antes de importar.');
+        reports = reports.slice(0, reports.length - parsedReportsCache.length);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    function openModal() {
+      document.getElementById('import-modal').classList.remove('hidden');
+      document.getElementById('stage-upload').classList.remove('hidden');
+      document.getElementById('stage-review').classList.add('hidden');
+      document.getElementById('upload-feedback').innerText = 'Selecionar ficheiros Word (.docx)';
+    }
+
+    function closeModal() {
+      document.getElementById('import-modal').classList.add('hidden');
+      document.getElementById('word-upload').value = '';
+    }
+
+    function editReport(id) {
+      const report = reports.find(r => r.id === id);
+      if (!report) return;
+      document.getElementById('edit-single-id').value = report.id;
+      document.getElementById('edit-single-unit').value = report.unit;
+      document.getElementById('edit-single-type').value = report.type;
+      document.getElementById('edit-single-date').value = report.date;
+      document.getElementById('edit-single-title').value = report.title;
+      document.getElementById('edit-single-content').value = report.content;
+      document.getElementById('edit-single-modal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-single-modal').classList.add('hidden');
+    }
+
+    function saveEditedReport() {
+      const id = document.getElementById('edit-single-id').value;
+      const index = reports.findIndex(r => r.id === id);
+      if (index === -1) return;
+      reports[index].unit = document.getElementById('edit-single-unit').value;
+      reports[index].type = document.getElementById('edit-single-type').value;
+      reports[index].date = document.getElementById('edit-single-date').value;
+      reports[index].title = document.getElementById('edit-single-title').value;
+      reports[index].content = document.getElementById('edit-single-content').value;
+      localStorage.setItem('sesiSenaiReportsV4', JSON.stringify(reports));
+      closeEditModal();
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const unitText = document.getElementById('filter-unit-text').value.toLowerCase();
+      const type = document.getElementById('filter-type').value;
+      const monthInput = document.getElementById('filter-month').value;
+      const startDate = document.getElementById('filter-start-date').value;
+      const endDate = document.getElementById('filter-end-date').value;
+
+      let filtered = reports;
+      if (unitText) filtered = filtered.filter(r => r.unit.toLowerCase().includes(unitText));
+      if (type !== 'all') filtered = filtered.filter(r => r.type === type);
+      if (monthInput) {
+        const [year, month] = monthInput.split('-');
+        filtered = filtered.filter(r => {
+          if (!r.date) return false;
+          const [rYear, rMonth] = r.date.split('-');
+          return rYear === year && rMonth === month;
+        });
+      }
+      if (startDate || endDate) {
+        filtered = filtered.filter(r => {
+          if (!r.date) return false;
+          if (startDate && r.date < startDate) return false;
+          if (endDate && r.date > endDate) return false;
+          return true;
+        });
+      }
+
+      const subtitle = [];
+      if (unitText) subtitle.push(`Busca: ${unitText}`);
+      if (type !== 'all') subtitle.push(type);
+      if (monthInput) {
+        const [y, m] = monthInput.split('-');
+        subtitle.push(`Mês: ${m}/${y}`);
+      }
+      if (startDate && endDate) {
+        subtitle.push(`De ${startDate.split('-').reverse().join('/')} até ${endDate.split('-').reverse().join('/')}`);
+      } else if (startDate) {
+        subtitle.push(`A partir de ${startDate.split('-').reverse().join('/')}`);
+      } else if (endDate) {
+        subtitle.push(`Até ${endDate.split('-').reverse().join('/')}`);
+      }
+
+      document.getElementById('active-filters-display').innerText = subtitle.length > 0 ? ` | Filtros: ${subtitle.join(' • ')}` : '';
+      renderNewsFeed(filtered);
+    }
+
+    function clearFilters() {
+      document.getElementById('filter-unit-text').value = '';
+      document.getElementById('filter-type').value = 'all';
+      document.getElementById('filter-month').value = '';
+      document.getElementById('filter-start-date').value = '';
+      document.getElementById('filter-end-date').value = '';
+      applyFilters();
+    }
+
+    function deleteReport(id) {
+      if (confirm('ATENÇÃO: Deseja apagar esta matéria definitivamente do sistema?')) {
+        reports = reports.filter(r => r.id !== id);
+        localStorage.setItem('sesiSenaiReportsV4', JSON.stringify(reports));
+        applyFilters();
+      }
+    }
+
+    function togglePdfInclusion(checkbox, cardId) {
+      const card = document.getElementById(cardId);
+      if (checkbox.checked) {
+        card.classList.remove('exclude-from-pdf');
+        card.style.opacity = '1';
+        card.style.filter = 'none';
+      } else {
+        card.classList.add('exclude-from-pdf');
+        card.style.opacity = '0.4';
+        card.style.filter = 'grayscale(100%)';
+      }
+    }
+
+    function renderNewsFeed(data) {
+      const feed = document.getElementById('news-feed');
+      feed.innerHTML = '';
+
+      if (data.length === 0) {
+        feed.innerHTML = '<p class="text-gray-500 text-center p-12 bg-white rounded-xl font-serif italic text-lg shadow-sm border border-gray-100">A mesa de redação não encontrou pautas para o filtro selecionado.</p>';
+        return;
+      }
+
+      const sortedData = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      sortedData.forEach(item => {
+        let formattedDate = 'Data Indefinida';
+        if (item.date) {
+          const [y, m, d] = item.date.split('-');
+          const dateObj = new Date(y, m - 1, d);
+          if (!isNaN(dateObj)) {
+            formattedDate = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(dateObj);
+          }
+        }
+
+        const paragraphs = item.content.split(/\n+/);
+        let editorialBody = '';
+        if (paragraphs.length > 0) {
+          editorialBody += `<p class="mb-4 text-justify font-serif text-gray-800 text-[15px] leading-relaxed">${formatEditorial(paragraphs[0])}</p>`;
+          for (let i = 1; i < paragraphs.length; i++) {
+            if (paragraphs[i].trim().length > 0) {
+              editorialBody += `<p class="mb-4 text-justify font-serif text-gray-800 text-[15px] leading-relaxed">${paragraphs[i].trim()}</p>`;
+            }
+          }
+        }
+
+        const card = document.createElement('div');
+        card.id = `card-${item.id}`;
+        card.className = 'avoid-break bg-white mb-12 border border-gray-200 rounded-xl overflow-hidden shadow-sm transition-all duration-300';
+
+        const imageHtml = item.image
+          ? `<div class="w-full bg-gray-50 flex justify-center py-6 mb-6 rounded-lg">
+               <img src="${item.image}" class="max-w-full object-contain max-h-[380px] drop-shadow-md rounded">
+             </div>`
+          : '';
+
+        card.innerHTML = `
+          <div class="hide-on-pdf bg-gray-50 border-b border-gray-200 px-6 py-3 flex justify-between items-center">
+            <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-blue select-none hover:text-blue-800 transition">
+              <input type="checkbox" checked onchange="togglePdfInclusion(this, 'card-${item.id}')" class="w-4 h-4 rounded text-brand-blue focus:ring-brand-blue cursor-pointer">
+              Incluir no Relatório (PDF)
+            </label>
+            <div class="flex gap-2">
+              <button onclick="editReport('${item.id}')" class="text-brand-blue hover:text-blue-800 flex items-center gap-1 text-xs font-bold transition px-3 py-1 hover:bg-blue-50 rounded border border-blue-200" title="Editar Matéria">
+                <i class="ph-bold ph-pencil-simple text-lg"></i> Editar
+              </button>
+              <button onclick="deleteReport('${item.id}')" class="text-gray-400 hover:text-brand-red flex items-center gap-1 text-xs font-bold transition px-3 py-1 hover:bg-red-50 rounded" title="Excluir Permanentemente">
+                <i class="ph-fill ph-trash text-lg"></i> Apagar
+              </button>
+            </div>
+          </div>
+          <div class="p-8 pt-6">
+            <div class="mb-3">
+              <span class="text-brand-red font-black text-xs tracking-[0.2em] uppercase border-b-2 border-brand-red pb-1 inline-block">${item.unit}</span>
+            </div>
+            <h3 class="text-3xl font-black text-brand-dark mb-4 leading-tight font-serif">${item.title}</h3>
+            <div class="flex items-center gap-6 mb-4 text-xs font-bold text-brand-gray uppercase tracking-wider">
+              <span class="flex items-center gap-1.5"><i class="ph-fill ph-calendar-blank text-brand-blue text-base"></i> ${formattedDate}</span>
+              <span class="flex items-center gap-1.5"><i class="ph-fill ph-tag text-brand-blue text-base"></i> ${item.type}</span>
+            </div>
+            ${imageHtml}
+            <div class="prose max-w-none">${editorialBody}</div>
+          </div>
+        `;
+        feed.appendChild(card);
+      });
+    }
+
+    function exportToPDF() {
+      const btn = document.getElementById('btn-export');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "<i class='ph ph-spinner animate-spin text-xl'></i> Gerando Relatório...";
+
+      window.scrollTo(0, 0);
+      const element = document.getElementById('executive-dashboard');
+      document.body.classList.add('pdf-mode');
+
+      const logoUrl = 'https://i.postimg.cc/tJyVRbDt/marca-CONJUNTAS-SESI-SENAI-2024-reduzida-colorida.png';
+      let logoBase64 = null;
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = function () {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        logoBase64 = canvas.toDataURL('image/png');
+        proceedWithPDF();
+      };
+      img.onerror = proceedWithPDF;
+      img.src = logoUrl;
+
+      function proceedWithPDF() {
+        setTimeout(() => {
+          const opt = {
+            margin: [28, 15, 20, 15],
+            filename: `Informe_Executivo_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              scrollY: 0,
+              scrollX: 0,
+              windowWidth: document.documentElement.offsetWidth,
+              letterRendering: true
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          };
+
+          html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
+            const totalPages = pdf.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+              pdf.setPage(i);
+              if (logoBase64) {
+                const imgWidth = 40;
+                const imgHeight = (img.height * imgWidth) / img.width;
+                pdf.addImage(logoBase64, 'PNG', 155, 8, imgWidth, imgHeight);
+              }
+              pdf.setDrawColor(0, 58, 112);
+              pdf.setLineWidth(0.3);
+              pdf.line(15, 24, 195, 24);
+              pdf.setFontSize(8);
+              pdf.setTextColor(150);
+              pdf.text(`Informe Executivo Institucional SESI SENAI Goiás - Pág. ${i} de ${totalPages}`, 15, 288);
+            }
+          }).save().then(() => {
+            document.body.classList.remove('pdf-mode');
+            btn.innerHTML = originalText;
+          });
+        }, 800);
+      }
+    }
+  </script>
+</body>
+</html>
