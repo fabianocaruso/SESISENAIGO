@@ -1,0 +1,297 @@
+:root {
+  --azul-sesi-senai: #15499B;
+  --azul-profundo: #0E3578;
+  --laranja: #F04B16;
+  --verde: #58B031;
+  --areia: #F7F2E8;
+  --branco: #FFFFFF;
+  --grafite: #202A36;
+  --cinza: #6D7785;
+  --linha: rgba(21, 73, 155, .14);
+  --sombra: 0 24px 70px rgba(14, 53, 120, .18);
+  --raio: 28px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--grafite);
+  background:
+    radial-gradient(circle at 10% 8%, rgba(88, 176, 49, .16), transparent 28rem),
+    radial-gradient(circle at 92% 12%, rgba(240, 75, 22, .14), transparent 26rem),
+    linear-gradient(135deg, #ffffff 0%, #f6f9ff 44%, var(--areia) 100%);
+}
+
+.page {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 34px 0 18px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.brand img {
+  width: min(440px, 64vw);
+  height: auto;
+  display: block;
+}
+
+.domain-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border: 1px solid var(--linha);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  color: var(--azul-profundo);
+  font-size: .94rem;
+  font-weight: 700;
+  box-shadow: 0 10px 25px rgba(14, 53, 120, .06);
+  white-space: nowrap;
+}
+
+.domain-pill::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--verde);
+  box-shadow: 18px 0 0 var(--laranja);
+  margin-right: 18px;
+}
+
+main {
+  display: grid;
+  align-items: center;
+  padding: 42px 0 54px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(330px, .95fr);
+  gap: 42px;
+  align-items: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  color: var(--azul-sesi-senai);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: .8rem;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--verde), var(--laranja));
+}
+
+h1 {
+  margin: 0;
+  color: var(--azul-profundo);
+  font-size: clamp(2.45rem, 6vw, 5.25rem);
+  line-height: .98;
+  letter-spacing: -.055em;
+  max-width: 830px;
+}
+
+.lead {
+  margin: 24px 0 0;
+  max-width: 650px;
+  color: var(--cinza);
+  font-size: clamp(1.05rem, 2vw, 1.28rem);
+  line-height: 1.65;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 34px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.button.primary {
+  color: var(--branco);
+  background: var(--azul-sesi-senai);
+  box-shadow: 0 16px 32px rgba(21, 73, 155, .24);
+}
+
+.button.secondary {
+  color: var(--azul-sesi-senai);
+  background: rgba(255, 255, 255, .74);
+  border: 1px solid var(--linha);
+}
+
+.button:hover,
+.button:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(21, 73, 155, .18);
+  outline: none;
+}
+
+.panel {
+  position: relative;
+  padding: 30px;
+  border-radius: var(--raio);
+  background: rgba(255, 255, 255, .78);
+  border: 1px solid rgba(255, 255, 255, .74);
+  box-shadow: var(--sombra);
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 9px;
+  background: linear-gradient(90deg, var(--verde), var(--azul-sesi-senai) 55%, var(--laranja));
+}
+
+.panel h2 {
+  margin: 10px 0 14px;
+  color: var(--azul-profundo);
+  font-size: 1.45rem;
+  letter-spacing: -.02em;
+}
+
+.panel p {
+  margin: 0;
+  color: var(--cinza);
+  line-height: 1.58;
+}
+
+.cards {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(246, 249, 255, .9);
+  border: 1px solid var(--linha);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(21, 73, 155, 0.12);
+  border-color: var(--azul-sesi-senai);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  color: var(--branco);
+  background: var(--azul-sesi-senai);
+  font-weight: 900;
+}
+
+/* Cores dos ícones: azul (padrão), verde, laranja, azul-profundo — ciclo de 4 */
+.card:nth-child(2) .icon { background: var(--verde); }
+.card:nth-child(3) .icon { background: var(--laranja); }
+.card:nth-child(4) .icon { background: var(--azul-profundo); }
+.card:nth-child(5) .icon { background: var(--verde); }
+.card:nth-child(6) .icon { background: var(--laranja); }
+
+.card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--grafite);
+}
+
+.card span {
+  color: var(--cinza);
+  font-size: .96rem;
+  line-height: 1.45;
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 0 34px;
+  color: var(--cinza);
+  font-size: .92rem;
+  border-top: 1px solid var(--linha);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.footer-links a {
+  color: var(--azul-sesi-senai);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (max-width: 880px) {
+  .hero { grid-template-columns: 1fr; }
+  header { align-items: flex-start; flex-direction: column; }
+  .panel { padding: 24px; }
+  footer { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 560px) {
+  .page { width: min(100% - 28px, 1180px); }
+  .brand img { width: 100%; }
+  .domain-pill { white-space: normal; }
+  .actions { flex-direction: column; }
+  .button { width: 100%; }
+  .card { grid-template-columns: 1fr; }
+}
