@@ -94,7 +94,8 @@
 
     <!-- Filtros -->
     <div class="bg-white p-4 rounded-xl shadow-sm mb-8 flex flex-col gap-4 border border-gray-100 hide-on-pdf" id="filters-container">
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 w-full">
+      <!-- Linha 1: filtros principais -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
         <div>
           <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Buscar Unidade</label>
           <input type="text" id="filter-unit-text" onkeyup="applyFilters()" placeholder="Ex: Canaã, Jaiara..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition">
@@ -110,14 +111,29 @@
           </select>
         </div>
         <div>
-          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Filtrar por Mês</label>
-          <input type="month" id="filter-month" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
+          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Mês Inicial</label>
+          <input type="month" id="filter-month-start" onchange="onMonthChange()" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
         </div>
-        <div class="md:col-span-2">
-          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Intervalo de Datas</label>
-          <div class="flex gap-2">
-            <input type="date" id="filter-start-date" onchange="applyFilters()" title="Data Inicial" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
-            <input type="date" id="filter-end-date" onchange="applyFilters()" title="Data Final" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
+        <div>
+          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Mês Final</label>
+          <input type="month" id="filter-month-end" onchange="onMonthChange()" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
+        </div>
+      </div>
+
+      <!-- Linha 2: refinamento de datas dentro dos meses -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div class="flex items-center gap-2 text-blue-700 text-[11px] font-bold uppercase mb-3 tracking-wider">
+          <i class="ph ph-calendar-range"></i>
+          <span>Período exato dentro dos meses selecionados:</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Data Inicial</label>
+            <input type="date" id="filter-start-date" onchange="applyFilters()" class="w-full border border-blue-300 rounded-lg p-2 text-sm font-medium bg-white hover:bg-gray-50 transition cursor-pointer">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Data Final</label>
+            <input type="date" id="filter-end-date" onchange="applyFilters()" class="w-full border border-blue-300 rounded-lg p-2 text-sm font-medium bg-white hover:bg-gray-50 transition cursor-pointer">
           </div>
         </div>
       </div>
@@ -281,6 +297,48 @@
       title = coreParts[0].trim().replace(/[,:;]\s*$/, '');
       if (title.length > 0) title = title.charAt(0).toUpperCase() + title.slice(1);
       return title;
+    }
+
+    function getFirstDayOfMonth(monthStr) {
+      if (!monthStr) return '';
+      return `${monthStr}-01`;
+    }
+
+    function getLastDayOfMonth(monthStr) {
+      if (!monthStr) return '';
+      const [year, month] = monthStr.split('-').map(Number);
+      const lastDay = new Date(year, month, 0).getDate();
+      return `${monthStr}-${String(lastDay).padStart(2, '0')}`;
+    }
+
+    function onMonthChange() {
+      const startMonthEl = document.getElementById('filter-month-start');
+      const endMonthEl = document.getElementById('filter-month-end');
+      let startMonth = startMonthEl.value;
+      let endMonth = endMonthEl.value;
+
+      // Garantir start <= end
+      if (startMonth && endMonth && startMonth > endMonth) {
+        endMonthEl.value = startMonth;
+        endMonth = startMonth;
+      }
+
+      if (startMonth || endMonth) {
+        const effectiveStart = startMonth || endMonth;
+        const effectiveEnd = endMonth || startMonth;
+        const newStart = getFirstDayOfMonth(effectiveStart);
+        const newEnd = getLastDayOfMonth(effectiveEnd);
+        const startDateEl = document.getElementById('filter-start-date');
+        const endDateEl = document.getElementById('filter-end-date');
+        startDateEl.value = newStart;
+        endDateEl.value = newEnd;
+        startDateEl.min = newStart;
+        startDateEl.max = newEnd;
+        endDateEl.min = newStart;
+        endDateEl.max = newEnd;
+      }
+
+      applyFilters();
     }
 
     function clearAllData() {
@@ -520,21 +578,14 @@
     function applyFilters() {
       const unitText = document.getElementById('filter-unit-text').value.toLowerCase();
       const type = document.getElementById('filter-type').value;
-      const monthInput = document.getElementById('filter-month').value;
+      const startMonth = document.getElementById('filter-month-start').value;
+      const endMonth = document.getElementById('filter-month-end').value;
       const startDate = document.getElementById('filter-start-date').value;
       const endDate = document.getElementById('filter-end-date').value;
 
       let filtered = reports;
       if (unitText) filtered = filtered.filter(r => r.unit.toLowerCase().includes(unitText));
       if (type !== 'all') filtered = filtered.filter(r => r.type === type);
-      if (monthInput) {
-        const [year, month] = monthInput.split('-');
-        filtered = filtered.filter(r => {
-          if (!r.date) return false;
-          const [rYear, rMonth] = r.date.split('-');
-          return rYear === year && rMonth === month;
-        });
-      }
       if (startDate || endDate) {
         filtered = filtered.filter(r => {
           if (!r.date) return false;
@@ -545,14 +596,22 @@
       }
 
       const subtitle = [];
-      if (unitText) subtitle.push(`Busca: ${unitText}`);
+      if (unitText) subtitle.push(`Busca: "${unitText}"`);
       if (type !== 'all') subtitle.push(type);
-      if (monthInput) {
-        const [y, m] = monthInput.split('-');
-        subtitle.push(`Mês: ${m}/${y}`);
+      if (startMonth || endMonth) {
+        const formatMonth = (m) => {
+          if (!m) return '';
+          const [y, mo] = m.split('-');
+          const names = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+          return `${names[parseInt(mo,10)-1]}/${y}`;
+        };
+        const sm = formatMonth(startMonth);
+        const em = formatMonth(endMonth);
+        if (sm && em && sm !== em) subtitle.push(`Período: ${sm} a ${em}`);
+        else if (sm) subtitle.push(`Mês: ${sm}`);
       }
       if (startDate && endDate) {
-        subtitle.push(`De ${startDate.split('-').reverse().join('/')} até ${endDate.split('-').reverse().join('/')}`);
+        subtitle.push(`Datas: ${startDate.split('-').reverse().join('/')} a ${endDate.split('-').reverse().join('/')}`);
       } else if (startDate) {
         subtitle.push(`A partir de ${startDate.split('-').reverse().join('/')}`);
       } else if (endDate) {
@@ -566,9 +625,16 @@
     function clearFilters() {
       document.getElementById('filter-unit-text').value = '';
       document.getElementById('filter-type').value = 'all';
-      document.getElementById('filter-month').value = '';
-      document.getElementById('filter-start-date').value = '';
-      document.getElementById('filter-end-date').value = '';
+      document.getElementById('filter-month-start').value = '';
+      document.getElementById('filter-month-end').value = '';
+      const startDateEl = document.getElementById('filter-start-date');
+      const endDateEl = document.getElementById('filter-end-date');
+      startDateEl.value = '';
+      endDateEl.value = '';
+      startDateEl.min = '';
+      startDateEl.max = '';
+      endDateEl.min = '';
+      endDateEl.max = '';
       applyFilters();
     }
 
@@ -710,19 +776,24 @@
 
           html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
             const totalPages = pdf.internal.getNumberOfPages();
+            const pageW = pdf.internal.pageSize.getWidth();
+            const pageH = pdf.internal.pageSize.getHeight();
             for (let i = 1; i <= totalPages; i++) {
               pdf.setPage(i);
-              if (logoBase64) {
-                const imgWidth = 40;
-                const imgHeight = (img.height * imgWidth) / img.width;
-                pdf.addImage(logoBase64, 'PNG', 155, 8, imgWidth, imgHeight);
-              }
+              // Linha separadora do cabeçalho
               pdf.setDrawColor(0, 58, 112);
               pdf.setLineWidth(0.3);
               pdf.line(15, 24, 195, 24);
+              // Número de página no rodapé esquerdo
               pdf.setFontSize(8);
               pdf.setTextColor(150);
-              pdf.text(`Informe Executivo Institucional SESI SENAI Goiás - Pág. ${i} de ${totalPages}`, 15, 288);
+              pdf.text(`Informe Executivo Institucional SESI SENAI Goiás - Pág. ${i} de ${totalPages}`, 15, pageH - 7);
+              // Logomarca no canto inferior direito
+              if (logoBase64) {
+                const imgWidth = 38;
+                const imgHeight = (img.height * imgWidth) / img.width;
+                pdf.addImage(logoBase64, 'PNG', pageW - imgWidth - 12, pageH - imgHeight - 5, imgWidth, imgHeight);
+              }
             }
           }).save().then(() => {
             document.body.classList.remove('pdf-mode');
