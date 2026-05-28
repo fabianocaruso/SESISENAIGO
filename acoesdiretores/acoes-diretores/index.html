@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Ações Estratégicas - Diretores SESI</title>
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="acoes-diretores/styles.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- App Main Container -->
+  <div class="app-container">
+    <!-- Barra Lateral (Sidebar) -->
+    <aside class="sidebar no-print">
+      <div class="sidebar-brand">
+        <div class="brand-logo">
+          <i data-lucide="shield-check" class="logo-icon"></i>
+        </div>
+        <div class="brand-text">
+          <h1>SESI</h1>
+          <span>Ações Estratégicas</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="#" class="menu-item active" id="menu-dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="menu-item" id="btn-open-user-modal">
+          <i data-lucide="settings"></i>
+          <span>Identificação / Perfil</span>
+        </a>
+      </nav>
+
+      <!-- Rodapé da Sidebar - Identificação do Diretor -->
+      <div class="sidebar-user" id="profile-widget">
+        <div class="user-avatar">
+          <i data-lucide="user" class="avatar-icon"></i>
+        </div>
+        <div class="user-info">
+          <h4 id="sidebar-director-name">Fabiano Sousa</h4>
+          <p id="sidebar-school-name">SESI Vila Leopoldina</p>
+        </div>
+        <button id="btn-edit-user" class="btn-icon-small" title="Editar Perfil">
+          <i data-lucide="edit-3"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+      <!-- Cabeçalho Principal (Ocultado na impressão) -->
+      <header class="main-header no-print">
+        <div class="header-title">
+          <h2>Painel de Gestão Estratégica</h2>
+          <p>Registre evidências, acompanhe indicadores e consolide relatórios.</p>
+        </div>
+        
+        <div class="header-actions">
+          <button id="btn-new-action" class="btn btn-primary">
+            <i data-lucide="plus-circle"></i>
+            <span>Nova Ação</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Cabeçalho de Impressão (Exibido apenas ao gerar o PDF semanal/mensal consolidado) -->
+      <div class="print-header show-print">
+        <div class="print-header-top">
+          <h2>Relatório Consolidado de Ações Estratégicas</h2>
+          <span class="print-badge" id="print-period-badge">Semanal</span>
+        </div>
+        <div class="print-header-details">
+          <div><strong>Unidade Escolar:</strong> <span id="print-school-name">SESI Vila Leopoldina</span></div>
+          <div><strong>Diretor(a):</strong> <span id="print-director-name">Fabiano Sousa</span></div>
+          <div><strong>Período de Referência:</strong> <span id="print-period-dates">25/05/2026 a 31/05/2026</span></div>
+          <div><strong>Data de Emissão:</strong> <span id="print-generation-date">28/05/2026</span></div>
+        </div>
+      </div>
+
+      <!-- Barra de Filtros e Período (Ocultada na impressão) -->
+      <section class="filters-section no-print">
+        <div class="period-toggle-container">
+          <button class="toggle-btn active" id="btn-view-weekly">Relatório Semanal</button>
+          <button class="toggle-btn" id="btn-view-monthly">Relatório Mensal</button>
+        </div>
+
+        <div class="filters-wrapper">
+          <!-- Semana Ativa -->
+          <div class="filter-group" id="group-week-picker">
+            <label for="week-picker">Selecione a Semana:</label>
+            <input type="week" id="week-picker" class="input-control">
+          </div>
+
+          <!-- Mês Ativo -->
+          <div class="filter-group hidden" id="group-month-picker">
+            <label for="month-picker">Selecione o Mês:</label>
+            <input type="month" id="month-picker" class="input-control">
+          </div>
+
+          <!-- Categoria -->
+          <div class="filter-group">
+            <label for="filter-subject">Assunto/Categoria:</label>
+            <select id="filter-subject" class="input-control">
+              <option value="todos">Todos os Assuntos</option>
+              <option value="Pedagógico">Pedagógico</option>
+              <option value="Infraestrutura">Infraestrutura</option>
+              <option value="Gestão de Pessoas">Gestão de Pessoas</option>
+              <option value="Parcerias/Comunidade">Parcerias/Comunidade</option>
+              <option value="Tecnologia">Tecnologia</option>
+            </select>
+          </div>
+
+          <!-- Status -->
+          <div class="filter-group">
+            <label for="filter-status">Status da Ação:</label>
+            <select id="filter-status" class="input-control">
+              <option value="todos">Todos os Status</option>
+              <option value="Rascunho">Rascunho (Salvo)</option>
+              <option value="Enviada para Consolidação">Enviada para Consolidação</option>
+            </select>
+          </div>
+
+          <!-- Busca por texto -->
+          <div class="search-input-wrapper">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="search-query" class="input-control" placeholder="Buscar título ou sumário...">
+          </div>
+        </div>
+      </section>
+
+      <!-- Painel de Métricas e KPIs (Disposto em colunas menores na impressão se desejado, aqui ocultamos ícones na impressão) -->
+      <section class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-info">
+            <p class="metric-label">Ações Registradas</p>
+            <h3 class="metric-value" id="kpi-total">0</h3>
+          </div>
+          <div class="metric-icon bg-blue-glow no-print">
+            <i data-lucide="files" class="text-blue"></i>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-info">
+            <p class="metric-label">Ações Enviadas</p>
+            <h3 class="metric-value" id="kpi-sent">0</h3>
+          </div>
+          <div class="metric-icon bg-green-glow no-print">
+            <i data-lucide="send" class="text-green"></i>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-info">
+            <p class="metric-label">Com Fotos (Evidência)</p>
+            <h3 class="metric-value" id="kpi-photos">0</h3>
+          </div>
+          <div class="metric-icon bg-purple-glow no-print">
+            <i data-lucide="image" class="text-purple"></i>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-info">
+            <p class="metric-label">Aproveitamento de Envio</p>
+            <h3 class="metric-value" id="kpi-rate">0%</h3>
+          </div>
+          <div class="metric-icon bg-amber-glow no-print">
+            <i data-lucide="percent" class="text-amber"></i>
+          </div>
+        </div>
+      </section>
+
+      <!-- Barra de Exportação e Avisos do Período -->
+      <section class="report-actions no-print">
+        <div class="report-period-desc">
+          <i data-lucide="calendar"></i>
+          <span id="label-active-period">Exibindo relatório do período...</span>
+        </div>
+        <div class="report-buttons">
+          <button id="btn-export-csv" class="btn btn-outline">
+            <i data-lucide="download"></i>
+            <span>Exportar para Excel (CSV)</span>
+          </button>
+          <button id="btn-export-pdf" class="btn btn-outline">
+            <i data-lucide="printer"></i>
+            <span>Imprimir Relatório Consolidado (PDF)</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Seção de Ações Cadastradas -->
+      <section class="actions-list-container">
+        <!-- Estado Vazio (Nenhuma ação encontrada) -->
+        <div id="empty-state" class="empty-state hidden">
+          <i data-lucide="clipboard-x" class="empty-icon"></i>
+          <h3>Nenhuma ação para exibir</h3>
+          <p>Registre novas ações estratégicas ou ajuste os filtros de busca e período acima.</p>
+          <button id="btn-empty-new-action" class="btn btn-primary no-print">
+            <i data-lucide="plus-circle"></i>
+            <span>Cadastrar Nova Ação</span>
+          </button>
+        </div>
+
+        <!-- Grid de Cards de Ações -->
+        <div id="actions-grid" class="actions-grid">
+          <!-- Cards injetados via JavaScript -->
+        </div>
+      </section>
+
+      <!-- Bloco de Assinaturas (Exibido apenas na última folha de impressão do PDF consolidado) -->
+      <section class="print-signature-area show-print">
+        <div class="signature-title">
+          <p>Declaro para os devidos fins que as ações descritas neste relatório semanal/mensal refletem fielmente as estratégias executadas no período.</p>
+        </div>
+        <div class="signature-block">
+          <div class="signature-line">
+            <div class="line-marker"></div>
+            <p class="signer-name" id="print-sig-director-name">Fabiano Sousa</p>
+            <p class="signer-role">Diretor(a) da Unidade Escolar</p>
+          </div>
+          <div class="signature-line">
+            <div class="line-marker"></div>
+            <p class="signer-name">_________________________________________</p>
+            <p class="signer-role">Supervisor(a) de Ensino Regional</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: Identificação de Perfil (Diretor / Escola) -->
+  <div id="user-modal" class="modal-overlay hidden no-print">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Identificação da Unidade e Direção</h3>
+        <button class="btn-close-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-user" class="modal-form">
+        <div class="form-group">
+          <label for="user-name">Nome do Diretor(a):</label>
+          <input type="text" id="user-name" class="input-control" required placeholder="Ex: Fabiano Sousa">
+          <span class="field-tip">Nome completo que assinará os relatórios impressos.</span>
+        </div>
+        <div class="form-group">
+          <label for="user-school">Unidade Escolar (Escola SESI):</label>
+          <input type="text" id="user-school" class="input-control" required placeholder="Ex: SESI Vila Leopoldina">
+          <span class="field-tip">Identifica a origem do relatório consolidado regional.</span>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline btn-close-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Perfil</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Cadastro e Edição de Ação Estratégica -->
+  <div id="action-modal" class="modal-overlay hidden no-print">
+    <div class="modal-container modal-large">
+      <div class="modal-header">
+        <h3 id="action-modal-title">Cadastrar Ação Estratégica</h3>
+        <button class="btn-close-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-action" class="modal-form" novalidate>
+        <input type="hidden" id="action-id">
+        
+        <div class="form-row">
+          <!-- Título da Ação com Validação -->
+          <div class="form-group flex-2">
+            <label for="action-title">Título da Ação <span class="required-asterisk">*</span></label>
+            <input type="text" id="action-title" class="input-control" required minlength="10" maxlength="100" placeholder="Ex: Treinamento Pedagógico ou Pintura de Segurança da Quadra">
+            <span class="validation-message error-message hidden" id="title-error">Título deve conter entre 10 e 100 caracteres.</span>
+          </div>
+          <!-- Categoria com Validação -->
+          <div class="form-group flex-1">
+            <label for="action-subject">Assunto/Categoria <span class="required-asterisk">*</span></label>
+            <select id="action-subject" class="input-control" required>
+              <option value="" disabled selected>Selecione o assunto...</option>
+              <option value="Pedagógico">Pedagógico</option>
+              <option value="Infraestrutura">Infraestrutura</option>
+              <option value="Gestão de Pessoas">Gestão de Pessoas</option>
+              <option value="Parcerias/Comunidade">Parcerias/Comunidade</option>
+              <option value="Tecnologia">Tecnologia</option>
+            </select>
+            <span class="validation-message error-message hidden" id="subject-error">Selecione uma categoria válida.</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <!-- Data com Validação -->
+          <div class="form-group flex-1">
+            <label for="action-date">Data da Ação <span class="required-asterisk">*</span></label>
+            <input type="date" id="action-date" class="input-control" required>
+            <span class="validation-message error-message hidden" id="date-error">A data informada é inválida.</span>
+          </div>
+          <!-- Status -->
+          <div class="form-group flex-1">
+            <label for="action-status">Status de Envio:</label>
+            <select id="action-status" class="input-control">
+              <option value="Rascunho">Salvar como Rascunho (Fica salvo localmente)</option>
+              <option value="Enviada para Consolidação">Salvar e Enviar para Consolidação Semanal/Mensal</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Sumário Executivo com Guia e Medidor de Qualidade -->
+        <div class="form-group">
+          <div class="summary-label-row">
+            <label for="action-summary">Sumário Executivo <span class="required-asterisk">*</span></label>
+            <!-- Assistente Visual (Guia de preenchimento) -->
+            <div class="guide-toggle" id="btn-toggle-guide">
+              <i data-lucide="help-circle"></i>
+              <span>Dicas de escrita</span>
+            </div>
+          </div>
+          
+          <!-- Box com guia contextual de ajuda -->
+          <div class="contextual-guide-box hidden" id="guide-box">
+            <h5>Como estruturar um sumário executivo de qualidade:</h5>
+            <ul>
+              <li><strong>Objetivo:</strong> O que motivou a ação? (Ex: alinhar processos, corrigir avarias, inovar na aula).</li>
+              <li><strong>Ação executada:</strong> Descreva o que ocorreu e quem participou de forma resumida.</li>
+              <li><strong>Resultado:</strong> Qual o benefício obtido? (Ex: 100% dos professores engajados, quadra liberada para uso).</li>
+            </ul>
+          </div>
+
+          <textarea id="action-summary" class="input-control textarea-large" required placeholder="Escreva o sumário detalhado descrevendo o objetivo, execução e os resultados obtidos..."></textarea>
+          
+          <div class="summary-footer">
+            <!-- Barra de Qualidade do Preenchimento -->
+            <div class="quality-container">
+              <div class="quality-bar-wrapper">
+                <div class="quality-bar-fill" id="quality-indicator"></div>
+              </div>
+              <span class="quality-label" id="quality-text">Preenchimento: Muito curto</span>
+            </div>
+            
+            <div class="char-counter">
+              <span id="char-count">0</span> / 1200 caracteres (mínimo de 60)
+            </div>
+          </div>
+          <span class="validation-message error-message hidden" id="summary-error">O sumário executivo deve ter no mínimo 60 caracteres e ser detalhado.</span>
+        </div>
+
+        <!-- Evidência Fotográfica Drag & Drop com Metadados -->
+        <div class="form-group">
+          <label>Evidência Fotográfica (Obrigatória para consolidação):</label>
+          <div id="drop-zone" class="drop-zone">
+            <div class="drop-zone-content">
+              <i data-lucide="cloud-upload" class="drop-icon"></i>
+              <p class="drop-title">Arraste a foto da evidência aqui ou clique para selecionar</p>
+              <p class="drop-subtitle">Formatos recomendados: JPG, PNG. A imagem será compactada automaticamente.</p>
+            </div>
+            <input type="file" id="file-input" class="hidden-input" accept="image/*">
+            
+            <!-- Pré-visualização com metadados detalhados da compressão -->
+            <div id="preview-container" class="preview-container hidden">
+              <img id="image-preview" src="" alt="Pré-visualização da evidência fotográfica">
+              
+              <div class="photo-metadata-card">
+                <div class="meta-row">
+                  <span>Arquivo:</span>
+                  <strong id="meta-name">-</strong>
+                </div>
+                <div class="meta-row">
+                  <span>Tamanho Original:</span>
+                  <span id="meta-size-orig">-</span>
+                </div>
+                <div class="meta-row">
+                  <span>Tamanho Comprimido:</span>
+                  <span class="compressed-success" id="meta-size-comp">-</span>
+                </div>
+                <div class="meta-row">
+                  <span>Redução Aplicada:</span>
+                  <strong class="compressed-percent" id="meta-percent">-</strong>
+                </div>
+              </div>
+
+              <button type="button" id="btn-remove-photo" class="btn-remove-photo" title="Remover Foto">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+          </div>
+          <span class="validation-message error-message hidden" id="photo-error">Anexe uma evidência fotográfica para o envio da ação.</span>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline btn-close-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-action">Registrar Ação</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Lightbox de Visualização Completa da Imagem -->
+  <div id="lightbox-modal" class="modal-overlay lightbox-overlay hidden no-print">
+    <div class="lightbox-container">
+      <button class="btn-close-lightbox"><i data-lucide="x"></i></button>
+      <img id="lightbox-img" src="" alt="Evidência Fotográfica Ampliada">
+      <div class="lightbox-caption" id="lightbox-caption">Descrição da Ação</div>
+    </div>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="acoes-diretores/app.js"></script>
+</body>
+</html>
