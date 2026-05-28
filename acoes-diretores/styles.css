@@ -1199,6 +1199,56 @@ select.input-control {
 }
 
 /* ==========================================================================
+   REFINAMENTO DE DATAS DENTRO DO PERÍODO MENSAL
+   ========================================================================== */
+
+.month-selectors {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.date-refinement-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.refinement-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.refinement-header i {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.refinement-inputs {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.period-date-range {
+  color: var(--text-subtitle);
+  font-weight: 500;
+  font-size: 0.9em;
+}
+
+/* ==========================================================================
    CONFIGURAÇÕES EXCLUSIVAS PARA IMPRESSÃO DE PDF (@media print)
    ========================================================================== */
 @media print {
@@ -1419,14 +1469,15 @@ select.input-control {
     position: fixed;
     right: 10mm;
     bottom: 7mm;
-    width: 34mm;
+    width: 38mm;
     height: auto;
     z-index: 9999;
+    opacity: 0.9;
   }
 
   .main-content,
   .temp-print-area {
-    padding-bottom: 22mm !important;
+    padding-bottom: 28mm !important;
   }
 
   /* Evitar quebra órfã de cabeçalhos */

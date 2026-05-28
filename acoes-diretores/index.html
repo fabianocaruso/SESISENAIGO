@@ -106,15 +106,33 @@
             </div>
           </div>
 
-          <!-- Intervalo de Meses -->
+          <!-- Intervalo de Meses + Refinamento de Datas -->
           <div class="period-range-group hidden" id="group-month-range">
-            <div class="filter-group">
-              <label for="month-start-picker">Mês Inicial:</label>
-              <input type="month" id="month-start-picker" class="input-control">
+            <div class="month-selectors">
+              <div class="filter-group">
+                <label for="month-start-picker">Mês Inicial:</label>
+                <input type="month" id="month-start-picker" class="input-control">
+              </div>
+              <div class="filter-group">
+                <label for="month-end-picker">Mês Final:</label>
+                <input type="month" id="month-end-picker" class="input-control">
+              </div>
             </div>
-            <div class="filter-group">
-              <label for="month-end-picker">Mês Final:</label>
-              <input type="month" id="month-end-picker" class="input-control">
+            <div class="date-refinement-group" id="date-refinement-group">
+              <div class="refinement-header">
+                <i data-lucide="calendar-range"></i>
+                <span>Período exato dentro dos meses selecionados:</span>
+              </div>
+              <div class="refinement-inputs">
+                <div class="filter-group">
+                  <label for="month-refine-start">Data Inicial:</label>
+                  <input type="date" id="month-refine-start" class="input-control">
+                </div>
+                <div class="filter-group">
+                  <label for="month-refine-end">Data Final:</label>
+                  <input type="date" id="month-refine-end" class="input-control">
+                </div>
+              </div>
             </div>
           </div>
 

@@ -169,6 +169,18 @@ function isMonthInActiveRange(dateStr) {
   return monthCode >= start && monthCode <= end;
 }
 
+function getFirstDayOfMonth(monthStr) {
+  if (!monthStr) return '';
+  return `${monthStr}-01`;
+}
+
+function getLastDayOfMonth(monthStr) {
+  if (!monthStr) return '';
+  const [year, month] = monthStr.split('-').map(Number);
+  const lastDay = new Date(year, month, 0).getDate();
+  return `${monthStr}-${String(lastDay).padStart(2, '0')}`;
+}
+
 // ==========================================================================
 // COMPRESSÃO E EVIDÊNCIA FOTOGRÁFICA
 // ==========================================================================
@@ -288,20 +300,15 @@ function render() {
     printPeriodDates.textContent = range;
     document.getElementById('print-period-badge').textContent = 'Por Data';
   } else {
-    const range = getMonthRangeLabel(state.activeStartMonth, state.activeEndMonth);
-    labelPeriod.innerHTML = `<i data-lucide="calendar"></i> Exibindo relatório por <strong>intervalo de meses</strong> (${range})`;
-    printPeriodDates.textContent = range;
+    const monthRange = getMonthRangeLabel(state.activeStartMonth, state.activeEndMonth);
+    const dateRange = getDateRangeLabel(state.activeStartDate, state.activeEndDate);
+    labelPeriod.innerHTML = `<i data-lucide="calendar"></i> Exibindo relatório por <strong>intervalo de meses</strong>: ${monthRange} &mdash; <span class="period-date-range">${dateRange}</span>`;
+    printPeriodDates.textContent = `${monthRange} — ${dateRange}`;
     document.getElementById('print-period-badge').textContent = 'Por Mês';
   }
-  
-  // Filtrar dados por período
-  let filtered = state.actions.filter(a => {
-    if (state.viewMode === 'date') {
-      return isDateInActiveRange(a.data);
-    } else {
-      return isMonthInActiveRange(a.data);
-    }
-  });
+
+  // Filtrar dados por período (ambos os modos usam intervalo de datas)
+  let filtered = state.actions.filter(a => isDateInActiveRange(a.data));
   
   // Calcular KPIs no período selecionado
   const total = filtered.length;
@@ -704,6 +711,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('date-end-picker').value = state.activeEndDate;
   document.getElementById('month-start-picker').value = state.activeStartMonth;
   document.getElementById('month-end-picker').value = state.activeEndMonth;
+
+  // Inicializar refinamento de datas para o modo mensal (primeiro/último dia do mês atual)
+  const monthRefineStart = getFirstDayOfMonth(state.activeStartMonth);
+  const monthRefineEnd = getLastDayOfMonth(state.activeEndMonth);
+  const refineStartEl = document.getElementById('month-refine-start');
+  const refineEndEl = document.getElementById('month-refine-end');
+  refineStartEl.value = monthRefineStart;
+  refineEndEl.value = monthRefineEnd;
+  refineStartEl.min = monthRefineStart;
+  refineStartEl.max = monthRefineEnd;
+  refineEndEl.min = monthRefineStart;
+  refineEndEl.max = monthRefineEnd;
   
   render();
   
@@ -716,19 +735,27 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('group-date-range').classList.remove('hidden');
     document.getElementById('group-month-range').classList.add('hidden');
     state.viewMode = 'date';
+    // Restaurar datas do modo de data
+    state.activeStartDate = document.getElementById('date-start-picker').value;
+    state.activeEndDate = document.getElementById('date-end-picker').value;
     render();
   });
-  
+
   document.getElementById('btn-view-monthly').addEventListener('click', (e) => {
     e.target.classList.add('active');
     document.getElementById('btn-view-weekly').classList.remove('active');
     document.getElementById('group-month-range').classList.remove('hidden');
     document.getElementById('group-date-range').classList.add('hidden');
     state.viewMode = 'monthly';
+    // Ao entrar no modo mensal, usar as datas refinadas do modo mensal
+    const refineStart = document.getElementById('month-refine-start').value;
+    const refineEnd = document.getElementById('month-refine-end').value;
+    if (refineStart) state.activeStartDate = refineStart;
+    if (refineEnd) state.activeEndDate = refineEnd;
     render();
   });
-  
-  // Inputs de Período
+
+  // Inputs de Período (modo Por Data)
   document.getElementById('date-start-picker').addEventListener('change', (e) => {
     state.activeStartDate = e.target.value;
     if (state.activeEndDate && state.activeStartDate > state.activeEndDate) {
@@ -737,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     render();
   });
-  
+
   document.getElementById('date-end-picker').addEventListener('change', (e) => {
     state.activeEndDate = e.target.value;
     if (state.activeStartDate && state.activeEndDate < state.activeStartDate) {
@@ -747,12 +774,24 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
   });
 
+  // Seletores de Mês — ao mudar, recalcula os limites e reseta os campos de refinamento
   document.getElementById('month-start-picker').addEventListener('change', (e) => {
     state.activeStartMonth = e.target.value;
     if (state.activeEndMonth && state.activeStartMonth > state.activeEndMonth) {
       state.activeEndMonth = state.activeStartMonth;
       document.getElementById('month-end-picker').value = state.activeEndMonth;
     }
+    // Recalcular e atualizar refinamento de datas
+    const newStart = getFirstDayOfMonth(state.activeStartMonth);
+    const newEnd = getLastDayOfMonth(state.activeEndMonth);
+    state.activeStartDate = newStart;
+    state.activeEndDate = newEnd;
+    document.getElementById('month-refine-start').value = newStart;
+    document.getElementById('month-refine-end').value = newEnd;
+    document.getElementById('month-refine-start').min = newStart;
+    document.getElementById('month-refine-start').max = newEnd;
+    document.getElementById('month-refine-end').min = newStart;
+    document.getElementById('month-refine-end').max = newEnd;
     render();
   });
 
@@ -761,6 +800,36 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.activeStartMonth && state.activeEndMonth < state.activeStartMonth) {
       state.activeStartMonth = state.activeEndMonth;
       document.getElementById('month-start-picker').value = state.activeStartMonth;
+    }
+    // Recalcular e atualizar refinamento de datas
+    const newStart = getFirstDayOfMonth(state.activeStartMonth);
+    const newEnd = getLastDayOfMonth(state.activeEndMonth);
+    state.activeStartDate = newStart;
+    state.activeEndDate = newEnd;
+    document.getElementById('month-refine-start').value = newStart;
+    document.getElementById('month-refine-end').value = newEnd;
+    document.getElementById('month-refine-start').min = newStart;
+    document.getElementById('month-refine-start').max = newEnd;
+    document.getElementById('month-refine-end').min = newStart;
+    document.getElementById('month-refine-end').max = newEnd;
+    render();
+  });
+
+  // Refinamento de datas dentro do intervalo de meses
+  document.getElementById('month-refine-start').addEventListener('change', (e) => {
+    state.activeStartDate = e.target.value;
+    if (state.activeEndDate && state.activeStartDate > state.activeEndDate) {
+      state.activeEndDate = state.activeStartDate;
+      document.getElementById('month-refine-end').value = state.activeEndDate;
+    }
+    render();
+  });
+
+  document.getElementById('month-refine-end').addEventListener('change', (e) => {
+    state.activeEndDate = e.target.value;
+    if (state.activeStartDate && state.activeEndDate < state.activeStartDate) {
+      state.activeStartDate = state.activeEndDate;
+      document.getElementById('month-refine-start').value = state.activeStartDate;
     }
     render();
   });
