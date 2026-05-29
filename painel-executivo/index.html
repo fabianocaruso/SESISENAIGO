@@ -24,9 +24,10 @@
             brand: {
               blue: '#003A70',
               red: '#E31937',
+              reddark: '#B00C28',
               light: '#F4F6F9',
               dark: '#2B2D42',
-              gray: '#8D99AE'
+              gray: '#5B6470'
             }
           }
         }
@@ -57,6 +58,33 @@
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+
+    /* Acessibilidade: rótulo visível apenas para leitores de tela */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+
+    /* Indicador de foco visível para navegação por teclado */
+    a:focus-visible, button:focus-visible, input:focus-visible,
+    select:focus-visible, textarea:focus-visible, summary:focus-visible {
+      outline: 2px solid #003A70; outline-offset: 2px;
+    }
+
+    /* Disclosure de período (substitui o card aninhado) */
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::after {
+      content: '\25BE'; margin-left: auto; transition: transform .2s; color: #5B6470;
+    }
+    details[open] > summary::after { transform: rotate(180deg); }
+
+    /* Região de avisos (toast) */
+    #toast-region {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      z-index: 60; display: flex; flex-direction: column; gap: .5rem;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body class="text-brand-dark antialiased min-h-screen pb-12">
@@ -72,12 +100,12 @@
         </div>
         <p class="text-brand-gray font-bold text-lg">
           SESI &amp; SENAI Goiás | <span id="current-date-display" class="text-brand-dark"></span>
-          <span id="active-filters-display" class="text-brand-red ml-1"></span>
+          <span id="active-filters-display" class="text-brand-reddark ml-1"></span>
         </p>
       </div>
 
       <div class="flex flex-col items-end gap-4 ml-4">
-        <img id="header-logo" src="https://i.postimg.cc/tJyVRbDt/marca-CONJUNTAS-SESI-SENAI-2024-reduzida-colorida.png" crossorigin="anonymous" alt="Marca SESI SENAI Goiás" style="height: 60px; width: auto; object-fit: contain; display: block;">
+        <img id="header-logo" src="marca-sesi-senai.png" alt="Marca SESI SENAI Goiás" style="height: 60px; width: auto; object-fit: contain; display: block;">
 
         <div class="flex gap-3 hide-on-pdf mt-2">
           <button onclick="openModal()" class="flex items-center gap-2 bg-white border border-brand-blue text-brand-blue font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
@@ -97,11 +125,11 @@
       <!-- Linha 1: filtros principais -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
         <div>
-          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Buscar Unidade</label>
+          <label for="filter-unit-text" class="block text-xs font-bold text-brand-gray uppercase mb-1">Buscar Unidade</label>
           <input type="text" id="filter-unit-text" onkeyup="applyFilters()" placeholder="Ex: Canaã, Jaiara..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition">
         </div>
         <div>
-          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Eixo de Atuação</label>
+          <label for="filter-type" class="block text-xs font-bold text-brand-gray uppercase mb-1">Eixo de Atuação</label>
           <select id="filter-type" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
             <option value="all">Todos os Eixos</option>
             <option value="Educação e Qualificação">Educação e Qualificação</option>
@@ -111,37 +139,56 @@
           </select>
         </div>
         <div>
-          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Mês Inicial</label>
+          <label for="filter-month-start" class="block text-xs font-bold text-brand-gray uppercase mb-1">Mês Inicial</label>
           <input type="month" id="filter-month-start" onchange="onMonthChange()" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
         </div>
         <div>
-          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Mês Final</label>
+          <label for="filter-month-end" class="block text-xs font-bold text-brand-gray uppercase mb-1">Mês Final</label>
           <input type="month" id="filter-month-end" onchange="onMonthChange()" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
         </div>
       </div>
 
-      <!-- Linha 2: refinamento de datas dentro dos meses -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <div class="flex items-center gap-2 text-blue-700 text-[11px] font-bold uppercase mb-3 tracking-wider">
+      <!-- Linha 2: refinamento de datas (oculto por padrão para reduzir ruído) -->
+      <details class="border-t border-gray-100 pt-3">
+        <summary class="flex items-center gap-2 text-brand-blue text-[11px] font-bold uppercase tracking-wider cursor-pointer select-none">
           <i class="ph ph-calendar-range"></i>
-          <span>Período exato dentro dos meses selecionados:</span>
-        </div>
+          <span>Refinar período exato (opcional)</span>
+        </summary>
+        <p class="text-[11px] text-brand-gray mt-2 mb-3 normal-case font-medium">
+          Os meses acima já definem o intervalo. Use os campos abaixo apenas para limitar a dias específicos dentro desses meses.
+        </p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Data Inicial</label>
-            <input type="date" id="filter-start-date" onchange="applyFilters()" class="w-full border border-blue-300 rounded-lg p-2 text-sm font-medium bg-white hover:bg-gray-50 transition cursor-pointer">
+            <label for="filter-start-date" class="block text-xs font-bold text-brand-gray uppercase mb-1">Data Inicial</label>
+            <input type="date" id="filter-start-date" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-medium bg-white hover:bg-gray-50 transition cursor-pointer">
           </div>
           <div>
-            <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Data Final</label>
-            <input type="date" id="filter-end-date" onchange="applyFilters()" class="w-full border border-blue-300 rounded-lg p-2 text-sm font-medium bg-white hover:bg-gray-50 transition cursor-pointer">
+            <label for="filter-end-date" class="block text-xs font-bold text-brand-gray uppercase mb-1">Data Final</label>
+            <input type="date" id="filter-end-date" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-medium bg-white hover:bg-gray-50 transition cursor-pointer">
           </div>
         </div>
-      </div>
+      </details>
 
       <div class="flex justify-between items-center w-full mt-2 border-t border-gray-100 pt-4">
-        <button onclick="clearAllData()" class="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-bold text-sm flex items-center gap-1" title="Zerar Banco de Dados">
-          <i class="ph-bold ph-trash"></i> Apagar Todos os Dados
-        </button>
+        <!-- Menu de dados: backup, restauração e (separadamente) exclusão total -->
+        <div class="relative">
+          <button onclick="toggleDataMenu(event)" aria-haspopup="true" aria-expanded="false" id="data-menu-btn" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors font-bold text-sm flex items-center gap-2 border border-gray-200">
+            <i class="ph-bold ph-database"></i> Dados <i class="ph-bold ph-caret-down text-xs"></i>
+          </button>
+          <div id="data-menu" class="hidden absolute left-0 mt-2 w-60 bg-white border border-gray-200 rounded-lg shadow-lg z-30 overflow-hidden">
+            <button onclick="exportBackup()" class="w-full text-left px-4 py-3 text-sm font-semibold text-brand-dark hover:bg-gray-50 flex items-center gap-2">
+              <i class="ph-bold ph-download-simple text-brand-blue"></i> Exportar backup (.json)
+            </button>
+            <label class="w-full text-left px-4 py-3 text-sm font-semibold text-brand-dark hover:bg-gray-50 flex items-center gap-2 cursor-pointer">
+              <i class="ph-bold ph-upload-simple text-brand-blue"></i> Importar backup (.json)
+              <input type="file" accept=".json,application/json" class="hidden" onchange="importBackup(event)">
+            </label>
+            <div class="border-t border-gray-100"></div>
+            <button onclick="clearAllData()" class="w-full text-left px-4 py-3 text-sm font-bold text-brand-reddark hover:bg-red-50 flex items-center gap-2">
+              <i class="ph-bold ph-trash"></i> Apagar todos os dados
+            </button>
+          </div>
+        </div>
         <button onclick="clearFilters()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors font-bold text-sm flex items-center gap-1" title="Limpar Filtros e Ver Tudo">
           <i class="ph-bold ph-arrows-counter-clockwise"></i> Redefinir Filtros
         </button>
@@ -149,18 +196,35 @@
     </div>
 
     <!-- Feed de Notícias -->
+    <h2 class="sr-only">Matérias do informe executivo</h2>
+
+    <div id="feed-controls" class="hide-on-pdf hidden items-center justify-between gap-3 mb-6 bg-white px-4 py-3 rounded-xl shadow-sm border border-gray-100">
+      <span id="feed-count" class="text-sm font-bold text-brand-gray"></span>
+      <div class="flex gap-2">
+        <button onclick="setAllPdfInclusion(true)" class="text-xs font-bold text-brand-blue border border-blue-200 hover:bg-blue-50 px-3 py-1.5 rounded transition flex items-center gap-1">
+          <i class="ph-bold ph-check-square"></i> Incluir todos no PDF
+        </button>
+        <button onclick="setAllPdfInclusion(false)" class="text-xs font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded transition flex items-center gap-1">
+          <i class="ph-bold ph-square"></i> Excluir todos
+        </button>
+      </div>
+    </div>
+
     <div id="news-feed" class="flex flex-col"></div>
 
   </div>
 
+  <!-- Região de avisos acessível (toasts) -->
+  <div id="toast-region" class="hide-on-pdf" aria-live="polite" aria-atomic="true"></div>
+
   <!-- Modal de Importação -->
-  <div id="import-modal" class="fixed inset-0 bg-brand-dark bg-opacity-80 z-50 hidden flex items-center justify-center p-4 hide-on-pdf backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden">
+  <div id="import-modal" class="fixed inset-0 bg-brand-dark bg-opacity-80 z-50 hidden flex items-center justify-center p-4 hide-on-pdf" onclick="if(event.target===this) closeModal()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
       <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-        <h3 class="text-2xl font-bold text-brand-blue flex items-center gap-2">
+        <h2 id="import-modal-title" class="text-2xl font-bold text-brand-blue flex items-center gap-2">
           <i class="ph-fill ph-magic-wand"></i> Importador Editorial
-        </h3>
-        <button onclick="closeModal()" class="text-gray-500 hover:text-brand-red transition-colors bg-white p-2 rounded-full shadow-sm">
+        </h2>
+        <button onclick="closeModal()" aria-label="Fechar importador" class="text-gray-500 hover:text-brand-reddark transition-colors bg-white p-2 rounded-full shadow-sm">
           <i class="ph-bold ph-x text-xl"></i>
         </button>
       </div>
@@ -170,15 +234,15 @@
           <div class="p-10 border-2 border-dashed border-brand-blue rounded-2xl bg-white text-center w-full max-w-xl cursor-pointer hover:bg-blue-50 transition-all shadow-sm" onclick="document.getElementById('word-upload').click()">
             <input type="file" id="word-upload" accept=".docx" multiple class="hidden" onchange="processWordFiles(event)">
             <i class="ph-fill ph-file-doc text-7xl text-brand-blue mb-4"></i>
-            <h4 class="text-xl font-bold text-brand-blue" id="upload-feedback">Selecionar ficheiros Word (.docx)</h4>
+            <h3 class="text-xl font-bold text-brand-blue" id="upload-feedback">Selecionar arquivos Word (.docx)</h3>
             <p class="text-sm text-gray-500 mt-2">O sistema extrairá o texto, fará a limpeza e organizará no formato jornalístico.</p>
           </div>
         </div>
 
         <div id="stage-review" class="hidden">
           <div class="flex justify-between items-center mb-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-            <h4 class="text-lg font-bold text-brand-dark"><span id="review-count">0</span> Matérias prontas para revisão.</h4>
-            <button onclick="saveAllParsedReports()" class="bg-brand-blue text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-blue-900 transition flex items-center gap-2">
+            <h3 class="text-lg font-bold text-brand-dark"><span id="review-count">0</span> Matérias prontas para revisão.</h3>
+            <button onclick="saveAllParsedReports(event)" class="bg-brand-blue text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-blue-900 transition flex items-center gap-2">
               <i class="ph-fill ph-check-circle"></i> Aprovar e Publicar
             </button>
           </div>
@@ -189,13 +253,13 @@
   </div>
 
   <!-- Modal de Edição Individual -->
-  <div id="edit-single-modal" class="fixed inset-0 bg-brand-dark bg-opacity-80 z-50 hidden flex items-center justify-center p-4 hide-on-pdf backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-auto max-h-[90vh] flex flex-col overflow-hidden">
+  <div id="edit-single-modal" class="fixed inset-0 bg-brand-dark bg-opacity-80 z-50 hidden flex items-center justify-center p-4 hide-on-pdf" onclick="if(event.target===this) closeEditModal()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-auto max-h-[90vh] flex flex-col overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
       <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-        <h3 class="text-xl font-bold text-brand-blue flex items-center gap-2">
+        <h2 id="edit-modal-title" class="text-xl font-bold text-brand-blue flex items-center gap-2">
           <i class="ph-fill ph-pencil-simple"></i> Editar Matéria
-        </h3>
-        <button onclick="closeEditModal()" class="text-gray-500 hover:text-brand-red transition-colors bg-white p-2 rounded-full shadow-sm">
+        </h2>
+        <button onclick="closeEditModal()" aria-label="Fechar edição" class="text-gray-500 hover:text-brand-reddark transition-colors bg-white p-2 rounded-full shadow-sm">
           <i class="ph-bold ph-x text-xl"></i>
         </button>
       </div>
@@ -203,11 +267,11 @@
         <input type="hidden" id="edit-single-id">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Unidade</label>
+            <label for="edit-single-unit" class="block text-xs font-bold text-brand-gray uppercase mb-1">Unidade</label>
             <input type="text" id="edit-single-unit" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue font-bold uppercase text-sm">
           </div>
           <div>
-            <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Eixo de Atuação</label>
+            <label for="edit-single-type" class="block text-xs font-bold text-brand-gray uppercase mb-1">Eixo de Atuação</label>
             <select id="edit-single-type" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue text-sm">
               <option value="Educação e Qualificação">Educação e Qualificação</option>
               <option value="Saúde e Segurança">Saúde e Segurança</option>
@@ -217,15 +281,15 @@
           </div>
         </div>
         <div>
-          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Data da Ação</label>
+          <label for="edit-single-date" class="block text-xs font-bold text-brand-gray uppercase mb-1">Data da Ação</label>
           <input type="date" id="edit-single-date" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue text-sm font-bold">
         </div>
         <div>
-          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Análise Executiva (Título)</label>
+          <label for="edit-single-title" class="block text-xs font-bold text-brand-gray uppercase mb-1">Análise Executiva (Título)</label>
           <input type="text" id="edit-single-title" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue font-serif font-bold text-lg text-brand-dark">
         </div>
         <div>
-          <label class="block text-xs font-bold text-brand-gray uppercase mb-1">Conteúdo Editorial</label>
+          <label for="edit-single-content" class="block text-xs font-bold text-brand-gray uppercase mb-1">Conteúdo Editorial</label>
           <textarea id="edit-single-content" rows="6" class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-brand-blue font-serif text-sm text-gray-800 leading-relaxed"></textarea>
         </div>
       </div>
@@ -244,7 +308,140 @@
 
     document.getElementById('current-date-display').innerText = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date());
 
-    window.onload = () => { applyFilters(); };
+    window.onload = () => { applyFilters(); markIconsDecorative(); };
+
+    /* ---------- Acessibilidade: marcar ícones como decorativos ---------- */
+    function markIconsDecorative() {
+      document.querySelectorAll('i[class*="ph"]').forEach(el => el.setAttribute('aria-hidden', 'true'));
+    }
+
+    /* ---------- Avisos (toast) com ação opcional de desfazer ---------- */
+    let toastTimer = null;
+    function showToast(message, undoFn, variant) {
+      const region = document.getElementById('toast-region');
+      if (!region) return;
+      clearTimeout(toastTimer);
+      region.innerHTML = '';
+      const toast = document.createElement('div');
+      const isError = variant === 'error';
+      toast.className = `pointer-events-auto ${isError ? 'bg-brand-reddark' : 'bg-brand-dark'} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-4 text-sm max-w-md`;
+      toast.setAttribute('role', isError ? 'alert' : 'status');
+      const span = document.createElement('span');
+      span.textContent = message;
+      toast.appendChild(span);
+      if (typeof undoFn === 'function') {
+        const btn = document.createElement('button');
+        btn.className = 'font-bold underline whitespace-nowrap hover:no-underline';
+        btn.textContent = 'Desfazer';
+        btn.onclick = () => { region.innerHTML = ''; clearTimeout(toastTimer); undoFn(); };
+        toast.appendChild(btn);
+      }
+      region.appendChild(toast);
+      toastTimer = setTimeout(() => { region.innerHTML = ''; }, undoFn ? 8000 : 4000);
+    }
+
+    /* ---------- Gestão de modais: foco e teclado ---------- */
+    let activeModalId = null;
+    let lastFocusedEl = null;
+
+    function openModalA11y(id) {
+      lastFocusedEl = document.activeElement;
+      activeModalId = id;
+      const modal = document.getElementById(id);
+      const focusable = modal.querySelector('button, [href], input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusable) setTimeout(() => focusable.focus(), 50);
+    }
+    function closeModalA11y(id) {
+      if (activeModalId === id) activeModalId = null;
+      if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') lastFocusedEl.focus();
+    }
+    document.addEventListener('keydown', (e) => {
+      if (!activeModalId) return;
+      if (e.key === 'Escape') {
+        if (activeModalId === 'import-modal') closeModal();
+        else if (activeModalId === 'edit-single-modal') closeEditModal();
+        return;
+      }
+      if (e.key === 'Tab') {
+        const modal = document.getElementById(activeModalId);
+        const items = [...modal.querySelectorAll('button, [href], input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])')]
+          .filter(el => !el.disabled && el.offsetParent !== null);
+        if (!items.length) return;
+        const first = items[0], last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+
+    /* ---------- Menu de dados (backup / restauração / exclusão) ---------- */
+    function toggleDataMenu(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('data-menu');
+      const btn = document.getElementById('data-menu-btn');
+      const willOpen = menu.classList.contains('hidden');
+      menu.classList.toggle('hidden');
+      btn.setAttribute('aria-expanded', String(willOpen));
+    }
+    function closeDataMenu() {
+      const menu = document.getElementById('data-menu');
+      if (menu && !menu.classList.contains('hidden')) {
+        menu.classList.add('hidden');
+        document.getElementById('data-menu-btn').setAttribute('aria-expanded', 'false');
+      }
+    }
+    document.addEventListener('click', (e) => {
+      const wrap = document.getElementById('data-menu');
+      const btn = document.getElementById('data-menu-btn');
+      if (wrap && !wrap.contains(e.target) && btn && !btn.contains(e.target)) closeDataMenu();
+    });
+
+    function exportBackup() {
+      closeDataMenu();
+      const blob = new Blob([JSON.stringify(reports, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup_informe_executivo_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Backup exportado: ${reports.length} matéria(s).`);
+    }
+
+    function importBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          if (!Array.isArray(data)) throw new Error('formato inválido');
+          const previous = [...reports];
+          reports = data;
+          localStorage.setItem('sesiSenaiReportsV4', JSON.stringify(reports));
+          applyFilters();
+          closeDataMenu();
+          showToast(`Backup importado: ${data.length} matéria(s).`, () => {
+            reports = previous;
+            localStorage.setItem('sesiSenaiReportsV4', JSON.stringify(reports));
+            applyFilters();
+            showToast('Importação desfeita.');
+          });
+        } catch (err) {
+          showToast('Arquivo de backup inválido. Selecione um .json exportado por este painel.', null, 'error');
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    /* ---------- Inclusão em lote no PDF ---------- */
+    function setAllPdfInclusion(include) {
+      document.querySelectorAll('#news-feed [data-pdf-checkbox]').forEach(cb => {
+        cb.checked = include;
+        togglePdfInclusion(cb, cb.dataset.card);
+      });
+    }
 
     function cleanAndImproveText(text) {
       if (!text) return '';
@@ -342,10 +539,27 @@
     }
 
     function clearAllData() {
-      if (confirm('ATENÇÃO: Deseja apagar todos os relatórios cadastrados do seu computador?')) {
+      closeDataMenu();
+      if (reports.length === 0) { showToast('Não há dados para apagar.'); return; }
+      const answer = prompt(
+        'Esta ação é irreversível e apagará TODOS os relatórios deste computador.\n\n' +
+        'Recomendamos exportar um backup antes de continuar.\n\n' +
+        'Digite APAGAR para confirmar:'
+      );
+      if (answer === null) return;
+      if (answer.trim().toUpperCase() === 'APAGAR') {
+        const snapshot = [...reports];
         localStorage.removeItem('sesiSenaiReportsV4');
         reports = [];
         applyFilters();
+        showToast('Todos os dados foram apagados.', () => {
+          reports = snapshot;
+          localStorage.setItem('sesiSenaiReportsV4', JSON.stringify(reports));
+          applyFilters();
+          showToast('Dados restaurados.');
+        });
+      } else {
+        showToast('Confirmação incorreta. Nada foi apagado.', null, 'error');
       }
     }
 
@@ -353,7 +567,7 @@
       const files = event.target.files;
       if (!files || files.length === 0) return;
 
-      document.getElementById('upload-feedback').innerText = 'A ler e formatar o ficheiro...';
+      document.getElementById('upload-feedback').innerText = 'Lendo e formatando o arquivo...';
       parsedReportsCache = [];
 
       for (let i = 0; i < files.length; i++) {
@@ -414,6 +628,13 @@
         }
       }
 
+      if (parsedReportsCache.length === 0) {
+        document.getElementById('upload-feedback').innerText =
+          'Nenhuma matéria reconhecida. Verifique se cada matéria começa com o nome da unidade (ex.: SESI, SENAI ou FATEC). Selecionar arquivos Word (.docx)';
+        event.target.value = '';
+        return;
+      }
+
       renderReviewCards();
     }
 
@@ -469,6 +690,7 @@
         `;
         container.appendChild(card);
       });
+      markIconsDecorative();
     }
 
     function removeParsedCard(id) {
@@ -497,19 +719,31 @@
       });
     }
 
-    async function saveAllParsedReports() {
+    async function saveAllParsedReports(event) {
       const btn = event.currentTarget;
+
+      // Lê os valores editados antes de validar
+      parsedReportsCache.forEach((item) => {
+        item.unit = document.getElementById(`edit-unit-${item.id}`).value.trim();
+        item.title = document.getElementById(`edit-title-${item.id}`).value.trim();
+        item.date = document.getElementById(`edit-date-${item.id}`).value;
+        item.type = document.getElementById(`edit-type-${item.id}`).value;
+        item.content = document.getElementById(`edit-content-${item.id}`).value.trim();
+      });
+
+      // Validação: unidade, título e conteúdo são obrigatórios
+      const incomplete = parsedReportsCache.filter(it => !it.unit || !it.title || !it.content);
+      if (incomplete.length > 0) {
+        showToast(`Preencha unidade, título e conteúdo em ${incomplete.length} matéria(s) antes de publicar.`, null, 'error');
+        return;
+      }
+
       const originalText = btn.innerHTML;
-      btn.innerHTML = 'A guardar...';
+      btn.innerHTML = 'Salvando...';
       btn.disabled = true;
 
       const compressPromises = [];
       parsedReportsCache.forEach((item) => {
-        item.unit = document.getElementById(`edit-unit-${item.id}`).value;
-        item.title = document.getElementById(`edit-title-${item.id}`).value;
-        item.date = document.getElementById(`edit-date-${item.id}`).value;
-        item.type = document.getElementById(`edit-type-${item.id}`).value;
-        item.content = document.getElementById(`edit-content-${item.id}`).value;
         if (item.image) {
           compressPromises.push(
             compressImageString(item.image).then(compressed => { item.image = compressed; })
@@ -519,14 +753,16 @@
 
       await Promise.all(compressPromises);
 
+      const addedCount = parsedReportsCache.length;
       try {
         reports = [...reports, ...parsedReportsCache];
         localStorage.setItem('sesiSenaiReportsV4', JSON.stringify(reports));
         applyFilters();
         closeModal();
+        showToast(`${addedCount} matéria(s) publicada(s) com sucesso.`);
       } catch (e) {
-        alert('⚠️ Limite de Memória Atingido. Esvazie a base de dados antes de importar.');
-        reports = reports.slice(0, reports.length - parsedReportsCache.length);
+        reports = reports.slice(0, reports.length - addedCount);
+        showToast('Limite de memória atingido. Exporte um backup e esvazie o banco de dados antes de importar.', null, 'error');
       } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -537,12 +773,14 @@
       document.getElementById('import-modal').classList.remove('hidden');
       document.getElementById('stage-upload').classList.remove('hidden');
       document.getElementById('stage-review').classList.add('hidden');
-      document.getElementById('upload-feedback').innerText = 'Selecionar ficheiros Word (.docx)';
+      document.getElementById('upload-feedback').innerText = 'Selecionar arquivos Word (.docx)';
+      openModalA11y('import-modal');
     }
 
     function closeModal() {
       document.getElementById('import-modal').classList.add('hidden');
       document.getElementById('word-upload').value = '';
+      closeModalA11y('import-modal');
     }
 
     function editReport(id) {
@@ -555,24 +793,36 @@
       document.getElementById('edit-single-title').value = report.title;
       document.getElementById('edit-single-content').value = report.content;
       document.getElementById('edit-single-modal').classList.remove('hidden');
+      openModalA11y('edit-single-modal');
     }
 
     function closeEditModal() {
       document.getElementById('edit-single-modal').classList.add('hidden');
+      closeModalA11y('edit-single-modal');
     }
 
     function saveEditedReport() {
       const id = document.getElementById('edit-single-id').value;
       const index = reports.findIndex(r => r.id === id);
       if (index === -1) return;
-      reports[index].unit = document.getElementById('edit-single-unit').value;
+
+      const unit = document.getElementById('edit-single-unit').value.trim();
+      const title = document.getElementById('edit-single-title').value.trim();
+      const content = document.getElementById('edit-single-content').value.trim();
+      if (!unit || !title || !content) {
+        showToast('Unidade, título e conteúdo são obrigatórios.', null, 'error');
+        return;
+      }
+
+      reports[index].unit = unit;
       reports[index].type = document.getElementById('edit-single-type').value;
       reports[index].date = document.getElementById('edit-single-date').value;
-      reports[index].title = document.getElementById('edit-single-title').value;
-      reports[index].content = document.getElementById('edit-single-content').value;
+      reports[index].title = title;
+      reports[index].content = content;
       localStorage.setItem('sesiSenaiReportsV4', JSON.stringify(reports));
       closeEditModal();
       applyFilters();
+      showToast('Matéria atualizada.');
     }
 
     function applyFilters() {
@@ -639,10 +889,19 @@
     }
 
     function deleteReport(id) {
-      if (confirm('ATENÇÃO: Deseja apagar esta matéria definitivamente do sistema?')) {
+      const index = reports.findIndex(r => r.id === id);
+      if (index === -1) return;
+      const removed = reports[index];
+      if (confirm('Deseja apagar esta matéria? Você poderá desfazer logo em seguida.')) {
         reports = reports.filter(r => r.id !== id);
         localStorage.setItem('sesiSenaiReportsV4', JSON.stringify(reports));
         applyFilters();
+        showToast('Matéria apagada.', () => {
+          reports.splice(Math.min(index, reports.length), 0, removed);
+          localStorage.setItem('sesiSenaiReportsV4', JSON.stringify(reports));
+          applyFilters();
+          showToast('Matéria restaurada.');
+        });
       }
     }
 
@@ -661,14 +920,38 @@
 
     function renderNewsFeed(data) {
       const feed = document.getElementById('news-feed');
+      const controls = document.getElementById('feed-controls');
       feed.innerHTML = '';
 
       if (data.length === 0) {
-        feed.innerHTML = '<p class="text-gray-500 text-center p-12 bg-white rounded-xl font-serif italic text-lg shadow-sm border border-gray-100">A mesa de redação não encontrou pautas para o filtro selecionado.</p>';
+        controls.classList.add('hidden');
+        controls.classList.remove('flex');
+        const hasNoData = reports.length === 0;
+        feed.innerHTML = hasNoData
+          ? `<div class="text-center p-12 bg-white rounded-xl shadow-sm border border-gray-100">
+               <i class="ph ph-newspaper text-5xl text-brand-gray mb-3 block"></i>
+               <p class="text-gray-600 font-serif italic text-lg mb-5">Ainda não há matérias publicadas. Importe um relatório para começar o informe.</p>
+               <button onclick="openModal()" class="hide-on-pdf inline-flex items-center gap-2 bg-brand-blue text-white font-semibold py-2.5 px-5 rounded-lg shadow-md hover:bg-blue-900 transition-colors">
+                 <i class="ph ph-magic-wand text-xl"></i> Importar Relatório
+               </button>
+             </div>`
+          : `<div class="text-center p-12 bg-white rounded-xl shadow-sm border border-gray-100">
+               <i class="ph ph-funnel text-5xl text-brand-gray mb-3 block"></i>
+               <p class="text-gray-600 font-serif italic text-lg mb-5">A mesa de redação não encontrou matérias para o filtro selecionado.</p>
+               <button onclick="clearFilters()" class="hide-on-pdf inline-flex items-center gap-2 bg-gray-200 text-gray-700 font-semibold py-2.5 px-5 rounded-lg hover:bg-gray-300 transition-colors">
+                 <i class="ph-bold ph-arrows-counter-clockwise text-lg"></i> Redefinir Filtros
+               </button>
+             </div>`;
+        markIconsDecorative();
         return;
       }
 
       const sortedData = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      controls.classList.remove('hidden');
+      controls.classList.add('flex');
+      document.getElementById('feed-count').textContent =
+        `${sortedData.length} matéria(s) — todas incluídas no PDF por padrão`;
 
       sortedData.forEach(item => {
         let formattedDate = 'Data Indefinida';
@@ -683,10 +966,10 @@
         const paragraphs = item.content.split(/\n+/);
         let editorialBody = '';
         if (paragraphs.length > 0) {
-          editorialBody += `<p class="mb-4 text-justify font-serif text-gray-800 text-[15px] leading-relaxed">${formatEditorial(paragraphs[0])}</p>`;
+          editorialBody += `<p class="mb-4 text-left font-serif text-gray-800 text-[15px] leading-relaxed">${formatEditorial(paragraphs[0])}</p>`;
           for (let i = 1; i < paragraphs.length; i++) {
             if (paragraphs[i].trim().length > 0) {
-              editorialBody += `<p class="mb-4 text-justify font-serif text-gray-800 text-[15px] leading-relaxed">${paragraphs[i].trim()}</p>`;
+              editorialBody += `<p class="mb-4 text-left font-serif text-gray-800 text-[15px] leading-relaxed">${paragraphs[i].trim()}</p>`;
             }
           }
         }
@@ -704,7 +987,7 @@
         card.innerHTML = `
           <div class="hide-on-pdf bg-gray-50 border-b border-gray-200 px-6 py-3 flex justify-between items-center">
             <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-blue select-none hover:text-blue-800 transition">
-              <input type="checkbox" checked onchange="togglePdfInclusion(this, 'card-${item.id}')" class="w-4 h-4 rounded text-brand-blue focus:ring-brand-blue cursor-pointer">
+              <input type="checkbox" checked data-pdf-checkbox data-card="card-${item.id}" onchange="togglePdfInclusion(this, 'card-${item.id}')" class="w-4 h-4 rounded text-brand-blue focus:ring-brand-blue cursor-pointer">
               Incluir no Relatório (PDF)
             </label>
             <div class="flex gap-2">
@@ -731,6 +1014,7 @@
         `;
         feed.appendChild(card);
       });
+      markIconsDecorative();
     }
 
     function exportToPDF() {
