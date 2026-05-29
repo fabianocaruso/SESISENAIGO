@@ -77,7 +77,7 @@
       </div>
 
       <div class="flex flex-col items-end gap-4 ml-4">
-        <img id="header-logo" src="marca-fieg.svg" alt="Sistema FIEG SESI SENAI IEL" style="height: 60px; width: auto; object-fit: contain; display: block;">
+        <img id="header-logo" src="https://i.postimg.cc/tJyVRbDt/marca-CONJUNTAS-SESI-SENAI-2024-reduzida-colorida.png" crossorigin="anonymous" alt="Marca SESI SENAI Goiás" style="height: 60px; width: auto; object-fit: contain; display: block;">
 
         <div class="flex gap-3 hide-on-pdf mt-2">
           <button onclick="openModal()" class="flex items-center gap-2 bg-white border border-brand-blue text-brand-blue font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
@@ -742,18 +742,19 @@
       const element = document.getElementById('executive-dashboard');
       document.body.classList.add('pdf-mode');
 
+      const logoUrl = 'https://i.postimg.cc/tJyVRbDt/marca-CONJUNTAS-SESI-SENAI-2024-reduzida-colorida.png';
       let logoBase64 = null;
       const img = new Image();
+      img.crossOrigin = 'Anonymous';
       img.onload = function () {
         const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || img.width || 1200;
-        canvas.height = img.naturalHeight || img.height || 675;
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.width = img.width; canvas.height = img.height;
+        canvas.getContext('2d').drawImage(img, 0, 0);
         logoBase64 = canvas.toDataURL('image/png');
         proceedWithPDF();
       };
       img.onerror = proceedWithPDF;
-      img.src = 'marca-fieg.svg';
+      img.src = logoUrl;
 
       function proceedWithPDF() {
         setTimeout(() => {
@@ -775,24 +776,19 @@
 
           html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
             const totalPages = pdf.internal.getNumberOfPages();
-            const pageW = pdf.internal.pageSize.getWidth();
-            const pageH = pdf.internal.pageSize.getHeight();
             for (let i = 1; i <= totalPages; i++) {
               pdf.setPage(i);
-              // Linha separadora do cabeçalho
+              if (logoBase64) {
+                const imgWidth = 40;
+                const imgHeight = (img.height * imgWidth) / img.width;
+                pdf.addImage(logoBase64, 'PNG', 155, 8, imgWidth, imgHeight);
+              }
               pdf.setDrawColor(0, 58, 112);
               pdf.setLineWidth(0.3);
               pdf.line(15, 24, 195, 24);
-              // Número de página no rodapé esquerdo
               pdf.setFontSize(8);
               pdf.setTextColor(150);
-              pdf.text(`Informe Executivo Institucional SESI SENAI Goiás - Pág. ${i} de ${totalPages}`, 15, pageH - 7);
-              // Logomarca no canto inferior direito
-              if (logoBase64) {
-                const imgWidth = 38;
-                const imgHeight = (img.height * imgWidth) / img.width;
-                pdf.addImage(logoBase64, 'PNG', pageW - imgWidth - 12, pageH - imgHeight - 5, imgWidth, imgHeight);
-              }
+              pdf.text(`Informe Executivo Institucional SESI SENAI Goiás - Pág. ${i} de ${totalPages}`, 15, 288);
             }
           }).save().then(() => {
             document.body.classList.remove('pdf-mode');
