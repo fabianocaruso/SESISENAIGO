@@ -162,6 +162,23 @@ CLOUDFLARE_PROJECT_NAME
 
 Esses valores não devem ser commitados no repositório.
 
+## Arquivos gerados e versionamento
+
+Como `.gitignore` pode variar na branch principal, esta proposta não depende de alterar esse arquivo. A recomendação é não versionar planilhas reais nem builds gerados. Em uma etapa futura, adicione regras equivalentes a estas na `.gitignore` da branch principal:
+
+```text
+input-workbooks/*
+!input-workbooks/.gitkeep
+dist/*
+!dist/.gitkeep
+storage/original/*
+!storage/original/.gitkeep
+storage/processed/*
+!storage/processed/.gitkeep
+storage/published/*
+!storage/published/.gitkeep
+```
+
 ## Recomendação de segurança
 
 Como os painéis serão públicos, Cloudflare Pages é adequado para a camada de publicação. Se futuramente houver painéis privados, será necessário adicionar autenticação real, por exemplo com Cloudflare Access, aplicação administrativa protegida, ou outro mecanismo de controle de acesso.
