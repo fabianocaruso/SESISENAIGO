@@ -1,4 +1,4 @@
-# CLOUDFLARE_PAGES_DEPLOYMENT.md
+# CF_PAGES_MVP_GUIDE.md
 
 ## Resposta curta
 
