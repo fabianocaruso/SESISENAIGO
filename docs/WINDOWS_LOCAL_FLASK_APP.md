@@ -1,4 +1,4 @@
-# LOCAL_PYTHON_APP.md
+# WINDOWS_LOCAL_FLASK_APP.md
 
 ## Próxima etapa prática
 
@@ -33,13 +33,13 @@ Na raiz do repositório:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-local.txt
 ```
 
 ## Subir o app local
 
 ```bash
-python -m flask --app app.main run --host=0.0.0.0 --port=8000 --debug
+python -m flask --app local_panel_app.main run --host=0.0.0.0 --port=8000 --debug
 ```
 
 Depois, acesse:
@@ -98,8 +98,8 @@ No Windows, use preferencialmente Python 3.12 ou 3.13 para evitar incompatibilid
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install -r requirements.txt
-python -m flask --app app.main run --host=0.0.0.0 --port=8000 --debug
+pip install -r requirements-local.txt
+python -m flask --app local_panel_app.main run --host=0.0.0.0 --port=8000 --debug
 ```
 
 Se o comando `flask` não for reconhecido, use sempre `python -m flask`, porque isso executa o Flask instalado dentro do ambiente virtual ativo.

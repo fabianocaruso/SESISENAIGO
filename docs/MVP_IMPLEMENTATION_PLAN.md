@@ -1,4 +1,4 @@
-# IMPLEMENTATION_PLAN.md
+# MVP_IMPLEMENTATION_PLAN.md
 
 ## Objetivo
 
@@ -41,7 +41,7 @@ Colocar no ar um servidor local em Python para validar o primeiro fluxo executá
 
 ### Critérios de aceite
 
-- O app sobe localmente com `python -m flask --app app.main run --host=0.0.0.0 --port=8000 --debug`.
+- O app sobe localmente com `python -m flask --app local_panel_app.main run --host=0.0.0.0 --port=8000 --debug`.
 - Um usuário consegue enviar `.xlsx` ou `.xlsm`.
 - O sistema gera relatório com abas, cabeçalhos, linhas, colunas e prévia.
 - Nenhuma IA participa da leitura do arquivo.

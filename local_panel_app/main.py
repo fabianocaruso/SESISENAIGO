@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from flask import Flask, Response, abort, jsonify, request, send_from_directory
 
-from app.services.excel_ingestion import inspect_workbook
+from local_panel_app.services.excel_ingestion import inspect_workbook
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 STORAGE_DIR = BASE_DIR / "storage"
