@@ -1,0 +1,3 @@
+# Use Python 3.12 or 3.13 on Windows. Avoid Python 3.14 for this MVP until all dependencies publish stable wheels.
+Flask==3.1.0
+openpyxl==3.1.5
