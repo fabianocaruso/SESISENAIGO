@@ -10,3 +10,10 @@ storage/published/*
 !storage/original/.gitkeep
 !storage/processed/.gitkeep
 !storage/published/.gitkeep
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
